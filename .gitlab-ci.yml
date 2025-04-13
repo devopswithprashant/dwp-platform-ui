@@ -14,6 +14,7 @@ cache:
 lint:
   stage: lint
   script:
+    - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
 
 # test:

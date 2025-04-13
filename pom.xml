@@ -27,22 +27,52 @@
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
+                        <phase>validate</phase>
                         <configuration>
                             <nodeVersion>${node.version}</nodeVersion>
                             <npmVersion>${npm.version}</npmVersion>
                         </configuration>
                     </execution>
+
+
                     <execution>
                         <id>npm-install</id>
-                        <goals><goal>npm</goal></goals>
-                        <configuration><arguments>ci</arguments></configuration>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>ci</arguments>
+                        </configuration>
                     </execution>
+
+                    <!-- Step 3: Lint -->
+                    <execution>
+                        <id>npm-lint</id>
+                        <goals><goal>npm</goal></goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <arguments>run lint</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Step 4: Build -->
                     <execution>
                         <id>npm-build</id>
                         <goals><goal>npm</goal></goals>
                         <phase>prepare-package</phase>
-                        <configuration><arguments>run build</arguments></configuration>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
                     </execution>
+
+                    <!-- <execution>
+                        <id>npm-build</id>
+                        <goals><goal>npm</goal></goals>
+                        <phase>prepare-package</phase>
+                        <configuration><arguments>run build</arguments></configuration>
+                    </execution> -->
+
                 </executions>
             </plugin>
 
