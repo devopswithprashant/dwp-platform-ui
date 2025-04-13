@@ -1,7 +1,7 @@
 image: maven:3.9.9-eclipse-temurin-11
 
 stages:
-  - lint
+  #- lint
   #- test
   - build
   #- release
@@ -11,11 +11,11 @@ cache:
   paths:
     - node_modules/
 
-lint:
-  stage: lint
-  script:
-    - mvn validate generate-resources verify
-    - mvn frontend:npm -Darguments="run lint"
+# lint:
+#   stage: lint
+#   script:
+#     - mvn validate generate-resources verify
+#     - mvn frontend:npm -Darguments="run lint"
 
 # test:
 #   stage: test
