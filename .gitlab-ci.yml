@@ -1,0 +1,53 @@
+image: maven:3.9.6-eclipse-temurin-20
+
+stages:
+  - lint
+  #- test
+  - build
+  #- release
+  #- deploy
+
+cache:
+  paths:
+    - node_modules/
+
+lint:
+  stage: lint
+  script:
+    - mvn frontend:npm -Darguments="run lint"
+
+# test:
+#   stage: test
+#   script:
+#     - mvn frontend:npm -Darguments="test -- --coverage"
+#   artifacts:
+#     paths:
+#       - coverage/
+
+build:
+  stage: build
+  script:
+    - mvn clean package
+  artifacts:
+    paths:
+      - build/
+  only:
+    - main
+    - develop
+
+# release:
+#   stage: release
+#   script:
+#     - mvn release:prepare release:perform -B
+#   only:
+#     - tags
+
+# deploy:
+#   stage: deploy
+#   script:
+#     - echo "Deploying to NGINX server or S3..."
+#     - rsync -avz build/ user@your-server:/var/www/blog-frontend/
+#     # OR for AWS S3:
+#     # - aws s3 sync build/ s3://your-bucket-name --delete
+#   only:
+#     - tags
