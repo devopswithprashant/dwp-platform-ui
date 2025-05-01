@@ -28,7 +28,10 @@ lint:
 build:
   stage: build
   script:
-    - mvn clean package
+    #- mvn clean package
+    - mvn clean install
+  after_script:
+    - ls 
   artifacts:
     paths:
       - build/

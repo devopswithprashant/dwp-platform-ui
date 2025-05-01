@@ -15,7 +15,7 @@ const EditBlog = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await axios.get(`http://localhost:9090/blogs/${id}`);
+        const response = await axios.get(`http://3.83.102.231:9090/blogs/${id}`);
         setFormData({
           title: response.data.title,
           content: response.data.content,
@@ -37,7 +37,7 @@ const EditBlog = () => {
         lastupdatedate: new Date().toISOString()
       };
       
-      await axios.put(`http://localhost:9090/blog/${id}`, updatedBlog);
+      await axios.put(`http://3.83.102.231:9090/blog/${id}`, updatedBlog);
       navigate(`/blogs/${id}`);
     } catch (error) {
       console.error('Error updating blog:', error);

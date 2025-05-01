@@ -11,7 +11,7 @@ const BlogDetail = () => {
   const handleDelete = async () => {
     try {
       if (window.confirm('Are you sure you want to delete this blog?')) {
-        await axios.delete(`http://localhost:9090/blog/${id}`);
+        await axios.delete(`http://3.83.102.231:9090/blog/${id}`);
         navigate('/blogs');
       }
     } catch (error) {
@@ -22,7 +22,7 @@ const BlogDetail = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await axios.get(`http://localhost:9090/blogs/${id}`);
+        const response = await axios.get(`http://3.83.102.231:9090/blogs/${id}`);
         setBlog(response.data);
       } catch (error) {
         console.error('Error fetching blog:', error);

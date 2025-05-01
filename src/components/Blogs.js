@@ -10,7 +10,7 @@ const Blogs = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('http://localhost:9090/blogs');
+        const response = await axios.get('http://3.83.102.231:9090/blogs');
         setBlogs(response.data);
         //console.log(response.data);
       } catch (error) {
