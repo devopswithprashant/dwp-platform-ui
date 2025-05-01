@@ -35,6 +35,7 @@ build:
   artifacts:
     paths:
       - build/
+      - target/
   only:
     - main
     - develop
