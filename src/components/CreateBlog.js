@@ -19,7 +19,8 @@ const CreateBlog = () => {
         lastupdatedate: new Date().toISOString()
       };
       
-      await axios.post('http://3.83.102.231:9090/blogs', newBlog);
+      await axios.post('http://localhost:9090/api/v1/blogs', newBlog);
+      //await axios.post(`${process.env.REACT_APP_API_BASE_URL}/blogs`, newBlog);
       navigate('/blogs');
       window.location.reload(); // Refresh to show new blog
     } catch (error) {
