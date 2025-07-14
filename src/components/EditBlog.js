@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 const EditBlog = () => {
   const { id } = useParams();
@@ -15,8 +16,9 @@ const EditBlog = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await axios.get(`http://localhost:9090/api/v1/blogs/${id}`);
-        //const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/blogs/${id}`);
+        //const response = await axios.get(`http://localhost:9090/api/v1/blogs/${id}`);
+        const response = await axios.get(`/api/v1/blogs/${id}`);
+        //const response = await apiClient.get(`/api/v1/blogs/${id}`);
         setFormData({
           title: response.data.title,
           content: response.data.content,
@@ -38,8 +40,9 @@ const EditBlog = () => {
         lastupdatedate: new Date().toISOString()
       };
       
-      await axios.put(`http://localhost:9090/api/v1/blog/${id}`, updatedBlog);
-      //await axios.put(`${process.env.REACT_APP_API_BASE_URL}/blog/${id}`, updatedBlog);
+      //await axios.put(`http://localhost:9090/api/v1/blog/${id}`, updatedBlog);
+      await axios.put(`/api/v1/blog/${id}`, updatedBlog);
+      //await apiClient.put(`/api/v1/blog/${id}`, updatedBlog);
       navigate(`/blogs/${id}`);
     } catch (error) {
       console.error('Error updating blog:', error);

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import PrettyTime from './PrettyTime';
+import apiClient from '../utils/apiClient';
 
 const BlogDetail = () => {
   const { id } = useParams();
@@ -11,8 +12,9 @@ const BlogDetail = () => {
   const handleDelete = async () => {
     try {
       if (window.confirm('Are you sure you want to delete this blog?')) {
-        await axios.delete(`http://localhost:9090/api/v1/blog/${id}`);
-        //await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/blog/${id}`);
+        //await axios.delete(`http://localhost:9090/api/v1/blog/${id}`);
+        await axios.delete(`/api/v1/blog/${id}`);
+        //await apiClient.delete(`/api/v1/blog/${id}`);
         navigate('/blogs');
       }
     } catch (error) {
@@ -23,8 +25,9 @@ const BlogDetail = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await axios.get(`http://localhost:9090/api/v1/blogs/${id}`);
-        //const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/blogs/${id}`);
+        //const response = await axios.get(`http://localhost:9090/api/v1/blogs/${id}`);
+        const response = await axios.get(`/api/v1/blogs/${id}`);
+        //const response = await apiClient.get(`/api/v1/blogs/${id}`);
         setBlog(response.data);
       } catch (error) {
         console.error('Error fetching blog:', error);

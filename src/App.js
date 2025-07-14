@@ -7,6 +7,7 @@ import Blogs from './components/Blogs';
 import BlogDetail from './components/BlogDetail';
 import CreateBlog from './components/CreateBlog';
 import EditBlog from './components/EditBlog';
+import Tester from './components/ApiTester';
 
 function App() {
   return (
@@ -15,15 +16,12 @@ function App() {
       <div className="container my-3">
         <Routes>
           <Route exact path="/" element={<Home heading="Home Page of DevOps with Prashant Site"/>} />
+          {/* <Route exact path="/" element={<Tester />} /> */}
           <Route exact path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
           <Route path="/create" element={<CreateBlog />} />
           <Route path="/blogs/:id/edit" element={<EditBlog />} />
-          {/* <Route exact path="/about" element={<About />} /> */}
-          {/* <Route exact path="/" element={<TextForms heading="Enter the text to utilize:"/>} /> */}
-          {/* <Route path="/" element={<Home />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:id" element={<BlogDetail />} /> */}
+          {/* <Route path="/tester" element={<Tester />} /> */}
         </Routes>
       </div>
     </Router>

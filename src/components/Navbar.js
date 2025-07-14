@@ -20,11 +20,10 @@ export default function Navbar(props) {
               <Link className="nav-link" to="/blogs">{props.sec2}</Link>
             </li>  
             {/* <li className="nav-item">
-              <Link className="nav-link" to="/create">{props.sec3}</Link>
+              <Link className="nav-link" to="/tester">tester</Link>
             </li>   */}
           </ul>
         </div>
-        {/* <button type="button" class="btn btn-success">+ Create</button> */}
         <button className="btn btn-success" onClick={() => navigate('/create')}>+ Create</button>
       </div>
     </nav>

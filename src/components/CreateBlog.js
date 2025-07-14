@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../utils/apiClient';
 
 const CreateBlog = () => {
   const navigate = useNavigate();
@@ -19,8 +20,9 @@ const CreateBlog = () => {
         lastupdatedate: new Date().toISOString()
       };
       
-      await axios.post('http://localhost:9090/api/v1/blogs', newBlog);
-      //await axios.post(`${process.env.REACT_APP_API_BASE_URL}/blogs`, newBlog);
+      //await axios.post('http://localhost:9090/api/v1/blogs', newBlog);
+      await axios.post('/api/v1/blogs', newBlog);
+      //await apiClient.post('/api/v1/blogs', newBlog);
       navigate('/blogs');
       window.location.reload(); // Refresh to show new blog
     } catch (error) {

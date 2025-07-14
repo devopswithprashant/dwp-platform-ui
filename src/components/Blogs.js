@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import PrettyTime from './PrettyTime';
+import apiClient from '../utils/apiClient';
 
 const Blogs = () => {
-  //const [blogs, setBlogs] = useState([]);
   const [blogs, setBlogs] = useState(null);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('http://localhost:9090/api/v1/blogs');
-        //const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/blogs`);
+        //const response = await axios.get('http://localhost:9090/api/v1/blogs');
+        const response = await axios.get('/api/v1/blogs');
+        //const response = await apiClient.get('/api/v1/blogs');
         setBlogs(response.data);
-        //console.log(response.data);
       } catch (error) {
         console.error('Error fetching blogs:', error);
       }
@@ -37,7 +37,6 @@ const Blogs = () => {
             className="list-group-item list-group-item-action">
             <h5>{blog.title}</h5>
             <p className="mb-1">author: {blog.author}</p>
-            {/* <small>Created: {new Date(blog.createDate).toLocaleDateString()}</small> */}
             <small>Last Modified: <PrettyTime timestamp={blog.lastupdatedate} /> | Created: <PrettyTime timestamp={blog.publishdate} /></small>
           </Link>
         ))}
