@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  frontend-app:
+    image: test-react-dock:latest
+    ports:
+      - 4200:80
+    depends_on:
+      backendapi:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-app-network
+  
+  backendapi:
+    image: spring-app
+    # ports:
+    #   - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/devblogdb?serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: devuser
+      SPRING_DATASOURCE_PASSWORD: devuser
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - blog-app-network
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: devblogdb
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devuser
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d devblogdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - blog-app-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+networks:
+  blog-app-network:
+
+volumes:
+  pgdata:
