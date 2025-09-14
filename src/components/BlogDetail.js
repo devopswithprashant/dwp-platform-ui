@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import PrettyTime from './PrettyTime';
-import apiClient from '../utils/apiClient';
+//import apiClient from '../utils/apiClient';
 
 const BlogDetail = () => {
   const { id } = useParams();

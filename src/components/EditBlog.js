@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import apiClient from '../utils/apiClient';
+//import apiClient from '../utils/apiClient';
 
 const EditBlog = () => {
   const { id } = useParams();

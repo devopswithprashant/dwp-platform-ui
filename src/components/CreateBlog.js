@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../utils/apiClient';
+//import apiClient from '../utils/apiClient';
 
 const CreateBlog = () => {
   const navigate = useNavigate();
