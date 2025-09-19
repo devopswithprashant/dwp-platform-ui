@@ -7,7 +7,7 @@ import Blogs from './components/Blogs';
 import BlogDetail from './components/BlogDetail';
 import CreateBlog from './components/CreateBlog';
 import EditBlog from './components/EditBlog';
-import Tester from './components/ApiTester';
+//import Tester from './components/ApiTester';
 
 function App() {
   return (
