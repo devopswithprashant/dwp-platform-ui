@@ -2,7 +2,7 @@ image: maven:3.9.9-eclipse-temurin-11
 
 stages:
   - lint
-  #- test
+  - test
   - build
   #- release
   #- deploy
@@ -17,19 +17,19 @@ lint:
     - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
 
-# test:
-#   stage: test
-#   script:
-#     - mvn frontend:npm -Darguments="test -- --coverage"
-#   artifacts:
-#     paths:
-#       - coverage/
+test:
+  stage: test
+  script:
+    - mvn clean test
+  # artifacts:
+  #   paths:
+  #     - coverage/
 
 build:
   stage: build
   script:
     #- mvn clean package
-    - mvn clean install
+    - mvn clean install -DskipTests
   after_script:
     - ls 
   artifacts:
