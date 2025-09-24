@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.devopswithprashant.ui</groupId>
     <artifactId>blog</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <packaging>pom</packaging>
 
     <name>React Frontend</name>
@@ -28,7 +28,7 @@
     <scm>
 		<connection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</connection>
 		<developerConnection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>v0.0.1</tag>
 	</scm>
 
     <build>
