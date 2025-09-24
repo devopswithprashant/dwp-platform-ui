@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.devopswithprashant.ui</groupId>
     <artifactId>blog</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>React Frontend</name>
@@ -13,6 +13,23 @@
         <node.version>v22.14.0</node.version>
         <npm.version>10.9.2</npm.version>
     </properties>
+
+    <distributionManagement>
+		<repository>
+			<id>myreleaserepo</id>
+			<url>http://13.220.60.150:8082/artifactory/myorg-release-local/</url>
+		</repository>
+		<snapshotRepository>
+			<id>mysnapshotrepo</id>
+			<url>http://13.220.60.150:8082/artifactory/myorg-snapshot-local/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+    <scm>
+		<connection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</connection>
+		<developerConnection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
     <build>
         <plugins>
@@ -56,6 +73,7 @@
                         </configuration>
                     </execution>
 
+                    <!-- Step 4: Build -->
                     <execution>
                         <id>npm-test</id>
                         <goals>
@@ -67,7 +85,7 @@
                         </configuration>
                     </execution>
 
-                    <!-- Step 4: Build -->
+                    <!-- Step 5: Build -->
                     <execution>
                         <id>npm-build</id>
                         <goals><goal>npm</goal></goals>
