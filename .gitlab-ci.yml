@@ -21,6 +21,8 @@ Lint:
   script:
     - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
+  tags:
+    - build
 
 
 Build:
@@ -29,6 +31,8 @@ Build:
   #   - !reference [.setSettings, script]
   script:
     - mvn clean install -DskipTests
+  tags:
+    - build
   # after_script:
   #   - ls 
   # artifacts:
@@ -43,6 +47,8 @@ UnitTest:
   #   - !reference [.setSettings, script]
   script:
     - mvn clean test
+  tags:
+    - build
   # artifacts:
   #   paths:
   #     - coverage/
@@ -50,12 +56,14 @@ UnitTest:
 
 SnapshotPublish:
   stage: publish
-  before_script:
-    - !reference [.setSettings, script]
+  # before_script:
+  #   - !reference [.setSettings, script]
   script:
     - mvn clean deploy -DskipTests
   only:
     - branches
+  tags:
+    - build
   # when:
   #   if: $CI_COMMIT_MESSAGE != [maven-release-plugin]*
   
@@ -80,10 +88,10 @@ SnapshotPublish:
 #     - tags
 
 
-.setSettings:
-  script:
-    - user=root
-    - mkdir -p /home/$user/.m2
-    - cp settings.xml /home/$user/.m2/settings.xml
+# .setSettings:
+#   script:
+#     - user=$(whoami)
+#     - mkdir -p /home/$user/.m2
+#     - cp settings.xml /home/$user/.m2/settings.xml
     
   
