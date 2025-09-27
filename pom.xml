@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.devopswithprashant.ui</groupId>
     <artifactId>blog</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -29,7 +29,7 @@
     <scm>
 		<connection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</connection>
 		<developerConnection>scm:git:https://gitlab.com/my-first-group5031428/blog-frontend.git</developerConnection>
-		<tag>v0.0.1</tag>
+		<tag>HEAD</tag>
 	</scm>
 
     <build>
