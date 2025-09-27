@@ -1,74 +1,92 @@
-image: maven:3.9.9-eclipse-temurin-11
+
 
 stages:
   - lint
   - build
   - test
-  #- release
-  #- deploy
+  - publish
+  - release
 
 
-cache:
-  paths:
-    - node_modules/
-    - .m2/repository
 
-lint:
+Lint:
   stage: lint
-  before_script:
-    - !reference [.setSettings, script]
   script:
     - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
+  tags:
+    - build
 
 
-build:
+Build:
   stage: build
-  before_script:
-    - !reference [.setSettings, script]
   script:
     - mvn clean install -DskipTests
-  # after_script:
-  #   - ls 
-  # artifacts:
-  #   paths:
-  #     - build/
-  #     - target/
+  tags:
+    - build
 
 
-test:
+
+UnitTest:
   stage: test
-  before_script:
-    - !reference [.setSettings, script]
   script:
     - mvn clean test
-  # artifacts:
-  #   paths:
-  #     - coverage/
+  tags:
+    - build
 
 
-# release:
-#   stage: release
-#   script:
-#     - mvn release:prepare release:perform -B
-#   only:
-#     - tags
 
-# releasePublish:
-#   stage: deploy
-#   script:
-#     - echo "Deploying to NGINX server or S3..."
-#     - rsync -avz build/ user@your-server:/var/www/blog-frontend/
-#     # OR for AWS S3:
-#     # - aws s3 sync build/ s3://your-bucket-name --delete
-#   only:
-#     - tags
-
-
-.setSettings:
+SnapshotPublish:
+  stage: publish
   script:
-    - user=${whoami}
-    - mkdir -p /home/$user/.m2
-    - cp settings.xml /home/$user/.m2/settings.xml
-    
+    - mvn clean deploy -DskipTests
+  tags:
+    - build
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
+    - when: on_success
+
+
+
+
+TagCreate:
+  stage: release
+  script:
+    - echo "Releasing Steps.."
+    - git config user.email "devopswithprashant@gmail.com"
+    - git config user.name "devopswithprashant"
+    - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME  # Fixes detached HEAD
+    - git pull origin $CI_COMMIT_REF_NAME  # Ensure the branch is up-to-date
+    - PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+    - ReleaseTagName="v${PROJECT_VERSION}"
+    - mvn release:clean
+    - mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=devopswithprashant -Dpassword=${GITLAB_TOKEN} -Darguments=-DskipTests -B
+    #- mvn release:perform -Dusername=devopswithprashant -Dpassword=${GITLAB_PUSH_TOKEN} -Darguments=-DskipTests -P prod -B
+    - git config --unset user.email
+    - git config --unset user.name
+  tags:
+    - build
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
+    # Run on the default branch
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    # Never run in any other cases
+    - when: never
+
+
+
+
+TagPublish:
+  stage: release
+  script:
+    - mvn clean install -DskipTests
+  only:
+    - tags
+  tags:
+    - build
+  
+
   
