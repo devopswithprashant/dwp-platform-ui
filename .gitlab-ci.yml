@@ -82,7 +82,7 @@ SnapshotPublish:
 
 .setSettings:
   script:
-    - user=${whoami}
+    - user=root
     - mkdir -p /home/$user/.m2
     - cp settings.xml /home/$user/.m2/settings.xml
     
