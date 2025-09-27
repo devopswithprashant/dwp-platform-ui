@@ -13,12 +13,16 @@ cache:
 
 lint:
   stage: lint
+  before_script:
+    - !reference [.setSettings, script]
   script:
     - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
 
 test:
   stage: test
+  before_script:
+    - !reference [.setSettings, script]
   script:
     - mvn clean test
   # artifacts:
@@ -27,8 +31,9 @@ test:
 
 build:
   stage: build
+  before_script:
+    - !reference [.setSettings, script]
   script:
-    #- mvn clean package
     - mvn clean install -DskipTests
   after_script:
     - ls 
@@ -36,9 +41,7 @@ build:
     paths:
       - build/
       - target/
-  only:
-    - main
-    - develop
+
 
 # release:
 #   stage: release
@@ -56,3 +59,11 @@ build:
 #     # - aws s3 sync build/ s3://your-bucket-name --delete
 #   only:
 #     - tags
+
+.setSettings:
+  script:
+    - whoami
+    - pwd
+    #- mkdir -p /ubuntu/.m2
+    #- cp settings.xml /ubuntu/.m2/settings.xml
+  
