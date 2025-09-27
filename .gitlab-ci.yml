@@ -6,7 +6,7 @@ stages:
   - test
   - publish
   - release
-  #- deploy
+
 
 
 Lint:
@@ -40,22 +40,14 @@ SnapshotPublish:
   stage: publish
   script:
     - mvn clean deploy -DskipTests
-  # only:
-  #   - branches
   tags:
     - build
-  # rules:
-  #   # Run on the default branch
-  #   - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-  #     when: manual
-    # Never run in any other cases
-    #- when: never
   rules:
     - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
       when: never
     - when: on_success
 
-  
+
 
 
 TagCreate:
@@ -96,23 +88,5 @@ TagPublish:
   tags:
     - build
   
-
-
-# release:
-#   stage: release
-#   script:
-#     - mvn release:prepare release:perform -B
-#   only:
-#     - tags
-
-# releasePublish:
-#   stage: deploy
-#   script:
-#     - echo "Deploying to NGINX server or S3..."
-#     - rsync -avz build/ user@your-server:/var/www/blog-frontend/
-#     # OR for AWS S3:
-#     # - aws s3 sync build/ s3://your-bucket-name --delete
-#   only:
-#     - tags
 
   
