@@ -83,7 +83,6 @@ TagCreate:
       when: never
     # Run on the default branch
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: manual
     # Never run in any other cases
     - when: never
 
