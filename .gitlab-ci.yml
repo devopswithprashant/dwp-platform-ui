@@ -40,13 +40,20 @@ SnapshotPublish:
   stage: publish
   script:
     - mvn clean deploy -DskipTests
-  only:
-    - branches
+  # only:
+  #   - branches
   tags:
     - build
+  # rules:
+  #   # Run on the default branch
+  #   - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  #     when: manual
+    # Never run in any other cases
+    #- when: never
   rules:
     - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
       when: never
+    - when: on_success
 
   
 
@@ -66,14 +73,17 @@ TagCreate:
     #- mvn release:perform -Dusername=devopswithprashant -Dpassword=${GITLAB_PUSH_TOKEN} -Darguments=-DskipTests -P prod -B
     - git config --unset user.email
     - git config --unset user.name
-  only:
-    - main
   tags:
     - build
   rules:
     - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
       when: never
-    - when: manual
+    # Run on the default branch
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    # Never run in any other cases
+    - when: never
+
 
 
 
