@@ -4,6 +4,7 @@ stages:
   - lint
   - build
   - test
+  - publish
   #- release
   #- deploy
 
@@ -13,19 +14,19 @@ cache:
     - node_modules/
     - .m2/repository
 
-lint:
+Lint:
   stage: lint
-  before_script:
-    - !reference [.setSettings, script]
+  # before_script:
+  #   - !reference [.setSettings, script]
   script:
     - mvn validate generate-resources verify
     - mvn frontend:npm -Darguments="run lint"
 
 
-build:
+Build:
   stage: build
-  before_script:
-    - !reference [.setSettings, script]
+  # before_script:
+  #   - !reference [.setSettings, script]
   script:
     - mvn clean install -DskipTests
   # after_script:
@@ -36,15 +37,29 @@ build:
   #     - target/
 
 
-test:
+UnitTest:
   stage: test
-  before_script:
-    - !reference [.setSettings, script]
+  # before_script:
+  #   - !reference [.setSettings, script]
   script:
     - mvn clean test
   # artifacts:
   #   paths:
   #     - coverage/
+
+
+SnapshotPublish:
+  stage: publish
+  before_script:
+    - !reference [.setSettings, script]
+  script:
+    - mvn clean deploy -DskipTests
+  only:
+    - branches
+  # when:
+  #   if: $CI_COMMIT_MESSAGE != [maven-release-plugin]*
+  
+
 
 
 # release:
