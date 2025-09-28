@@ -4,7 +4,6 @@ stages:
   - build
   - test
   - publish
-  - release
 
 
 
@@ -65,45 +64,5 @@ SnapshotPublish:
     - when: on_success
 
 
-
-
-TagCreate:
-  stage: release
-  script:
-    - echo "Releasing Steps.."
-    - git config user.email "devopswithprashant@gmail.com"
-    - git config user.name "devopswithprashant"
-    - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME  # Fixes detached HEAD
-    - git pull origin $CI_COMMIT_REF_NAME  # Ensure the branch is up-to-date
-    - PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
-    - ReleaseTagName="v${PROJECT_VERSION}"
-    - mvn release:clean
-    - mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=devopswithprashant -Dpassword=${GITLAB_TOKEN} -Darguments=-DskipTests -B
-    #- mvn release:perform -Dusername=devopswithprashant -Dpassword=${GITLAB_PUSH_TOKEN} -Darguments=-DskipTests -P prod -B
-    - git config --unset user.email
-    - git config --unset user.name
-  tags:
-    - build
-  rules:
-    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-      when: never
-    # Run on the default branch
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: on_success
-    # Never run in any other cases
-    - when: never
-
-
-
-
-TagPublish:
-  stage: release
-  script:
-    - mvn clean deploy -DskipTests
-  only:
-    - tags
-  tags:
-    - build
-  
 
   
