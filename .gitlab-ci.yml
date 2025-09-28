@@ -4,6 +4,7 @@ stages:
   - build
   - test
   - publish
+  - release
 
 
 
@@ -15,6 +16,8 @@ Lint:
   tags:
     - build
   rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
@@ -27,6 +30,8 @@ Build:
   tags:
     - build
   rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
     - when: on_success
 
 
@@ -38,6 +43,8 @@ UnitTest:
   tags:
     - build
   rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
@@ -51,10 +58,53 @@ SnapshotPublish:
   tags:
     - build
   rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
 
 
+
+
+TagCreate:
+  stage: release
+  script:
+    - echo "Releasing Steps.."
+    - git config user.email "devopswithprashant@gmail.com"
+    - git config user.name "devopswithprashant"
+
+    - git checkout -B $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME  # Fixes detached HEAD
+    - git pull origin $CI_COMMIT_REF_NAME  # Ensure the branch is up-to-date
+
+    - PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+    - ReleaseTagName="v${PROJECT_VERSION}"
+
+    - mvn release:clean
+    - mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=devopswithprashant -Dpassword=${GITLAB_TOKEN} -Darguments=-DskipTests -B
+    #- mvn release:perform -Dusername=devopswithprashant -Dpassword=${GITLAB_TOKEN} -Darguments=-DskipTests -B
+    - git config --unset user.email
+    - git config --unset user.name
+  tags:
+    - build
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: on_success
+    - when: never
+
+
+
+
+TagPublish:
+  stage: release
+  script:
+    - mvn clean deploy -DskipTests
+  only:
+    - tags
+  tags:
+    - build
+  
 
   
