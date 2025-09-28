@@ -15,8 +15,6 @@ Lint:
   tags:
     - build
   rules:
-    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
@@ -29,8 +27,6 @@ Build:
   tags:
     - build
   rules:
-    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-      when: never
     - when: on_success
 
 
@@ -42,8 +38,6 @@ UnitTest:
   tags:
     - build
   rules:
-    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
@@ -57,8 +51,6 @@ SnapshotPublish:
   tags:
     - build
   rules:
-    - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
     - when: on_success
