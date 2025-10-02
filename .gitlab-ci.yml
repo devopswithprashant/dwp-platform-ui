@@ -152,7 +152,7 @@ DEV:Deploy:
     name: DEV
     url: https://dev.devopswithprashant.com
   rules:
-    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
@@ -177,7 +177,7 @@ QA:Deploy:
     name: QA
     url: https://qa.devopswithprashant.com
   rules:
-    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
@@ -202,7 +202,7 @@ STAGE:Deploy:
     name: STAGE
     url: https://stage.devopswithprashant.com
   rules:
-    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
