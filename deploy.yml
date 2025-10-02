@@ -1,0 +1,88 @@
+.deploy:
+  script:
+    - echo "Deploying on $deployEnvironment Environment..."
+    - !reference [.downloadArtifacts, script]
+    - |
+      ssh ubuntu@$TARGET_HOSTNAME "mkdir -p /tmp/$CI_JOB_ID/"
+      scp /tmp/$CI_JOB_ID/app.zip ubuntu@$TARGET_HOSTNAME:/tmp/$CI_JOB_ID/
+      ssh ubuntu@$TARGET_HOSTNAME "bash /space/devopswithprashant/ui/deploy.sh $artifactVersion $TARGET_DIR $CI_JOB_ID"
+      echo "cleaning up the temp files"
+      rm -rf /tmp/$CI_JOB_ID
+      ssh ubuntu@$TARGET_HOSTNAME "rm -rf /tmp/$CI_JOB_ID"
+
+
+
+
+
+
+.downloadArtifacts:
+  script:
+    - |
+      releaseDownload() {
+        echo "Downloading artifact from $artifactURL"
+        zipFileName="blog-$artifactVersion.zip"
+        artifactURL="http://$artifactoryHostname/artifactory/myorg-release-local/com/devopswithprashant/ui/blog/$artifactVersion/$zipFileName"
+        mkdir -p /tmp/$CI_JOB_ID
+        tempDir="/tmp/$CI_JOB_ID"
+        echo "Downloading artifact from $artifactURL"
+        curl -u $artifactoryReadUser:$artifactoryReadPass -o $tempDir/app.zip $artifactURL
+        if [[ $? -ne 0 ]]; then
+            echo "Failed to download artifact from $artifactURL"
+            exit 1
+        fi
+        # Now check if the file exists and atleast size is greater than 1 KB
+        if [[ ! -f $tempDir/app.zip || $(stat -c%s $tempDir/app.zip) -lt 1024 ]]; then
+            echo "Downloaded artifact is either missing or corrupted."
+            exit 1
+        fi
+        echo "Artifact downloaded successfully."
+      }
+
+
+      snapshotDownload() {
+        artifactbaseURL="http://$artifactoryHostname/artifactory/myorg-snapshot-local/com/devopswithprashant/ui/blog/$artifactVersion"
+        # Now fetch the metadata file to get the latest build number and timestamp
+        metadataURL="${artifactbaseURL}/maven-metadata.xml"
+        echo "Fetching metadata from $metadataURL"
+        metadata=$(curl -u $artifactoryReadUser:$artifactoryReadPass -s $metadataURL)
+        if [[ $? -ne 0 || -z $metadata ]]; then
+            echo "Failed to fetch metadata from $metadataURL"
+            exit 1
+        fi
+        timestamp=$(echo "$metadata" | grep -oP '(?<=<timestamp>)[^<]+' | tail -1)
+        buildNumber=$(echo "$metadata" | grep -oP '(?<=<buildNumber>)[^<]+' | tail -1)
+        if [[ -z $timestamp || -z $buildNumber ]]; then
+            echo "Failed to extract timestamp or build number from metadata."
+            exit 1
+        fi
+        echo "Latest snapshot timestamp = $timestamp"
+        echo "build number = $buildNumber"
+        # Construct the snapshot artifact filename
+        versionWithoutSnapshot=${artifactVersion%-SNAPSHOT}
+        zipFileName="blog-$versionWithoutSnapshot-$timestamp-$buildNumber.zip"
+        artifactURL="${artifactbaseURL}/$zipFileName"
+        mkdir -p /tmp/$CI_JOB_ID
+        tempDir="/tmp/$CI_JOB_ID"
+        echo "Downloading artifact from $artifactURL"
+        curl -u $artifactoryReadUser:$artifactoryReadPass -o $tempDir/app.zip $artifactURL
+        if [[ $? -ne 0 ]]; then
+            echo "Failed to download artifact from $artifactURL"
+            exit 1
+        fi
+        # Now check if the file exists and atleast size is greater than 1 KB
+        if [[ ! -f $tempDir/app.zip || $(stat -c%s $tempDir/app.zip) -lt 1024 ]]; then
+            echo "Downloaded artifact is either missing or corrupted."
+            exit 1
+        fi
+        echo "Artifact downloaded successfully."        
+      }
+
+
+      if [[ $artifactVersion == *"-SNAPSHOT" ]]; then
+          snapshotDownload
+      else
+          releaseDownload
+      fi
+
+
+
