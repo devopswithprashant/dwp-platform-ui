@@ -12,7 +12,7 @@ import EditBlog from './components/EditBlog';
 function App() {
   return (
     <Router>
-      <Navbar title="devops with prashant" sec1="Home" sec2="Blogs" sec3="Create"/>
+      <Navbar title="DevOps with Prashant" sec1="Home" sec2="Blogs" sec3="Create"/>
       <div className="container my-3">
         <Routes>
           <Route exact path="/" element={<Home heading="Home Page of DevOps with Prashant Site"/>} />
