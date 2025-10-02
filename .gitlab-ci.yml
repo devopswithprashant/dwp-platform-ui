@@ -127,7 +127,8 @@ TagPublish:
 
 DEV:Deploy:
   stage: nonprod
-  extends: deploy
+  script:
+    - !reference[.deploy, script]
   variables:
     deployEnvironment: "DEV"
     artifactVersion: ${artifactVERSION}
