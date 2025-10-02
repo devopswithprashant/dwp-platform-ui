@@ -5,6 +5,10 @@ include:
 variables:
   DEV_HOSTNAME: 10.71.14.3
   DEV_DIR: "/space/devopswithprashant/ui/dev"
+  QA_HOSTNAME: 10.71.14.3
+  QA_DIR: "/space/devopswithprashant/ui/qa"
+  STAGE_HOSTNAME: 10.71.14.3
+  STAGE_DIR: "/space/devopswithprashant/ui/stage"
   artifactoryHostname: "54.174.127.243:8082"
 
 
@@ -148,12 +152,62 @@ DEV:Deploy:
     name: DEV
     url: https://dev.devopswithprashant.com
   rules:
-    # - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
-    #   when: never
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: never
     - when: on_success
   tags:
     - nonprod
 
 
+
+QA:Deploy:
+  stage: nonprod
+  script:
+    - !reference [.deploy, script]
+  variables:
+    deployEnvironment: "QA"
+    artifactVersion: ${artifactVERSION}
+    TARGET_HOSTNAME: ${QA_HOSTNAME}
+    TARGET_DIR: ${QA_DIR}
+  environment:
+    name: QA
+    url: https://qa.devopswithprashant.com
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
+    - when: on_success
+  tags:
+    - nonprod
+
+
+
+STAGE:Deploy:
+  stage: nonprod
+  script:
+    - !reference [.deploy, script]
+  variables:
+    deployEnvironment: "STAGE"
+    artifactVersion: ${artifactVERSION}
+    TARGET_HOSTNAME: ${STAGE_HOSTNAME}
+    TARGET_DIR: ${STAGE_DIR}
+  environment:
+    name: STAGE
+    url: https://stage.devopswithprashant.com
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: never
+    - when: manual
+  tags:
+    - nonprod
