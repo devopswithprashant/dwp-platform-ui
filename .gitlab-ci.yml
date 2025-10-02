@@ -9,6 +9,8 @@ variables:
   QA_DIR: "/space/devopswithprashant/ui/qa"
   STAGE_HOSTNAME: 10.71.14.3
   STAGE_DIR: "/space/devopswithprashant/ui/stage"
+  PROD_HOSTNAME: 10.251.15.1 
+  PROD_DIR: "/space/devopswithprashant/ui/blog"
   artifactoryHostname: "54.174.127.243:8082"
 
 
@@ -21,6 +23,7 @@ stages:
   - publish
   - release
   - nonprod
+  - prod
 
 
 
@@ -211,3 +214,24 @@ STAGE:Deploy:
     - when: manual
   tags:
     - nonprod
+
+
+
+
+PROD:Deploy:
+  stage: prod
+  when: manual
+  script:
+    - !reference [.deploy, script]
+  variables:
+    deployEnvironment: "PROD"
+    artifactVersion: ${artifactVERSION}
+    TARGET_HOSTNAME: ${PROD_HOSTNAME}
+    TARGET_DIR: ${PROD_DIR}
+  environment:
+    name: PROD
+    url: https://devopswithprashant.com
+  only:
+    - tags
+  tags:
+    - prod
