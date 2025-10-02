@@ -1,3 +1,14 @@
+include:
+  - local: deploy.yml
+
+
+variables:
+  DEV_HOSTNAME: 10.71.14.3
+  DEV_DIR: "/space/devopswithprashant/ui/dev"
+  artifactoryHostname: "54.174.127.243:8082"
+
+
+
 
 stages:
   - lint
@@ -5,6 +16,7 @@ stages:
   - test
   - publish
   - release
+  - nonprod
 
 
 
@@ -107,4 +119,28 @@ TagPublish:
     - build
   
 
-  
+
+
+
+
+
+
+DEV:Deploy:
+  stage: nonprod
+  extends: deploy
+  variables:
+    deployEnvironment: "DEV"
+    artifactVersion: ${artifactVERSION}
+    TARGET_HOSTNAME: ${DEV_HOSTNAME}
+    TARGET_DIR: ${DEV_DIR}
+  environment:
+    name: DEV
+    url: https://dev.devopswithprashant.com
+  rules:
+    # - if: $CI_COMMIT_MESSAGE =~ /\[maven-release-plugin\] prepare (release|for next development iteration)/
+    #   when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: on_success
+
+
