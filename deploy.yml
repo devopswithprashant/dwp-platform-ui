@@ -1,4 +1,5 @@
 deploy:
+  stage: deploy
   script:
     - echo "Deploying on $deployEnvironment Environment..."
     - !reference [.downloadArtifacts, script]
