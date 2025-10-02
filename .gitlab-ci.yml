@@ -67,6 +67,11 @@ SnapshotPublish:
   stage: publish
   script:
     - mvn clean deploy -DskipTests
+    - PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - echo "artifactVERSION=${PROJECT_VERSION}" > Versionvar.env
+  artifacts:
+    reports:
+      dotenv: Versionvar.env
   tags:
     - build
   rules:
@@ -113,6 +118,11 @@ TagPublish:
   stage: release
   script:
     - mvn clean deploy -DskipTests
+    - PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - echo "artifactVERSION=${PROJECT_VERSION}" > Versionvar.env
+  artifacts:
+    reports:
+      dotenv: Versionvar.env
   only:
     - tags
   tags:
