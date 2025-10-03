@@ -15,7 +15,7 @@ function App() {
       <Navbar title="DevOps with Prashant" sec1="Home" sec2="Blogs" sec3="Create"/>
       <div className="container my-3">
         <Routes>
-          <Route exact path="/" element={<Home heading="Home Page of DevOps with Prashant Site"/>} />
+          <Route exact path="/" element={<Home heading="Master DevOps with expert learning resource"/>} />
           {/* <Route exact path="/" element={<Tester />} /> */}
           <Route exact path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
