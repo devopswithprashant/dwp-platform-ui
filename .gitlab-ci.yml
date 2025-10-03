@@ -11,7 +11,7 @@ variables:
   STAGE_DIR: "/space/devopswithprashant/ui/stage"
   PROD_HOSTNAME: 10.251.15.1 
   PROD_DIR: "/space/devopswithprashant/ui/blog"
-  artifactoryHostname: "54.174.127.243:8082"
+  artifactoryHostname: "52.200.234.237:8082"
 
 
 
@@ -235,3 +235,5 @@ PROD:Deploy:
     - tags
   tags:
     - prod
+
+
