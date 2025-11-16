@@ -5,7 +5,9 @@ name: Build
 
 on:
   push:
-  workflow_dispatch:
+    tags:
+      - "v*"
+
 
 permissions:
   contents: read
@@ -30,7 +32,7 @@ env:
   # Set defaults here or as repository/organization variables (recommended)
   AWS_REGION: us-east-1           # <- change to your region or set as repo variable
   AWS_ACCOUNT_ID: 850756192530      # <- change to your AWS account id or set as repo var
-  ECR_REPOSITORY: dwp/np/ui            # <- change to your ECR repository name
+  ECR_REPOSITORY: dwp/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
 
@@ -68,15 +70,9 @@ jobs:
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     
-    - name: Lint
-      run: |
-        mvn validate generate-resources verify
-        mvn frontend:npm -Darguments="run lint"
 
-    - name: Build
-      run: |
-        mvn clean package --file pom.xml -DskipTests -B
-        ls -la target/
+    - name: Release Publish
+      run: mvn clean deploy --file pom.xml -DskipTests -B
     
     - name: Upload build artifact (target/)
       uses: actions/upload-artifact@v4
@@ -84,12 +80,8 @@ jobs:
         name: build-target
         # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
         path: target/*
-
-    - name: Test
-      run: mvn clean test 
     
-    - name: Publish
-      run: mvn clean deploy --file pom.xml -DskipTests -B
+
 
 
   docker:
@@ -102,7 +94,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_ECR_NONPROD_PUSH_ROLE }}  # or use a secret: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: ${{ secrets.AWS_ECR_PROD_PUSH_ROLE }}  # or use a secret: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-session-name: GitHubActionsECR
           aws-region: ${{ env.AWS_REGION }}
 
@@ -132,7 +124,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:v${{ needs.maven.outputs.projectVersion }}
           # Optional: use GitHub Actions cache for build layers (fast incremental builds)
           cache-from: type=gha
           cache-to: type=gha,mode=max
