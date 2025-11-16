@@ -1,0 +1,74 @@
+# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
+# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+
+name: Release Create
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write 
+
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+
+
+
+
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ARTIFACTORY_DEV_USER: ${{ secrets.ARTIFACTORY_DEV_USER }}
+  ARTIFACTORY_DEV_KEY: ${{ secrets.ARTIFACTORY_DEV_KEY }}
+  ARTIFACTORY_RELEASE_USER: ${{ secrets.ARTIFACTORY_RELEASE_USER }}
+  ARTIFACTORY_RELEASE_KEY: ${{ secrets.ARTIFACTORY_RELEASE_KEY }}
+
+
+
+
+
+jobs:
+  Create:
+    runs-on: ubuntu-latest
+    outputs:
+      projectVersion: ${{ steps.project_version.outputs.version }}
+    steps:
+
+    - name: Setup Maven Action
+      uses: s4u/setup-maven-action@v1.19.0
+      with:
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: 3.9.11
+          settings-servers: |
+            [{
+              "id": "myreleaserepo",
+              "username": "${env.ARTIFACTORY_RELEASE_USER}",
+              "password": "${env.ARTIFACTORY_RELEASE_KEY}"
+            },
+            {
+              "id": "mysnapshotrepo",
+              "username": "${env.ARTIFACTORY_DEV_USER}",
+              "password": "${env.ARTIFACTORY_DEV_KEY}"
+            }]
+    
+    - name: Get project version from POM
+      id: project_version
+      run: |
+        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Release Tag Create
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        PROJECT_VERSION=${{ steps.project_version.outputs.version }}
+        ReleaseTagName="v${PROJECT_VERSION}"
+        mvn release:clean
+        mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=github-actions[bot] -Dpassword=${GITHUB_TOKEN} -Darguments=-DskipTests -B -U
+
