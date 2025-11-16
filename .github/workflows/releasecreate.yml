@@ -65,10 +65,10 @@ jobs:
 
     - name: Release Tag Create
       run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.email "devopswithprashant@gmail.com"
+        git config user.name "devopswithprashant"
         PROJECT_VERSION=${{ steps.project_version.outputs.version }}
         ReleaseTagName="v${PROJECT_VERSION}"
         mvn release:clean
-        mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=github-actions[bot] -Dpassword=${GITHUB_TOKEN} -Darguments=-DskipTests -B -U
+        mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=devopswithprashant -Dpassword=${GHEC_RELEASE_PAT} -Darguments=-DskipTests -B -U
 
