@@ -227,7 +227,7 @@ jobs:
           git commit -m "chore(QA): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
-          sleep 120
+          sleep 320
 
   deploy-STAGE:
     needs: [maven, docker, deploy-QA]
@@ -275,7 +275,7 @@ jobs:
           git commit -m "chore(STAGE): bump UI new version ${NEW_TAG} of blog image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
-          sleep 120
+          sleep 320
 
   deploy-PROD:
     needs: [maven, docker, deploy-STAGE]
