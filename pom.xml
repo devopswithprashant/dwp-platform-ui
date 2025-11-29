@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.devopswithprashant.ui</groupId>
     <artifactId>webapp</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.8-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -29,7 +29,7 @@
     <scm>
 		<connection>scm:git:https://github.com/devopswithprashant/dwp-platform-ui.git</connection>
 		<developerConnection>scm:git:https://github.com/devopswithprashant/dwp-platform-ui.git</developerConnection>
-		<tag>v1.1.7</tag>
+		<tag>HEAD</tag>
 	</scm>
 
     <build>
