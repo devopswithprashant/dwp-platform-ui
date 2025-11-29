@@ -35,6 +35,7 @@ env:
   ECR_REPOSITORY: dwp/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
+  GITOPS_BRANCH_NAME: "feat-ui-cd"
 
 
 
@@ -130,51 +131,196 @@ jobs:
           cache-to: type=gha,mode=max
 
   
-  # deploy-DEV:
-  #   needs: [maven, docker]
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #   steps:
-  #   # Checkout the repository to the GitHub Actions runner
-  #     - name: Checkout gitops repo
-  #       uses: actions/checkout@v4
-  #       with:
-  #         repository: "devopswithprashant/k8-blogApp"
-  #         token: ${{ secrets.GHEC_TOKEN_K8 }}
-  #         ref: ${{ github.ref }}
-  #         fetch-depth: 10
+  deploy-DEV:
+    needs: [maven, docker]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+      - name: Checkout gitops repo
+        uses: actions/checkout@v4
+        with:
+          repository: "devopswithprashant/k8-blogApp"
+          token: ${{ secrets.GHEC_TOKEN_K8 }}
+          ref: ${{ env.GITOPS_BRANCH_NAME }}
+          fetch-depth: 10
 
-  #     - name: Update image tag in target file
-  #       #working-directory: gitops
-  #       id: update
-  #       env:
-  #         FILE: "apps/blog/dev/backend/blog-deployment.yaml"
-  #         IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/np/blog"
-  #         NEW_TAG: ${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
-  #       run: |
-  #         set -euo pipefail
-  #         if [ ! -f "$FILE" ]; then
-  #           echo "ERROR target file not found: $FILE"
-  #           exit 1
-  #         fi
-  #         sed -i -E "s|(image:\s*850756192530\.dkr\.ecr\.us-east-1\.amazonaws\.com/dwp/np/blog:)[^[:space:]]+|\1${NEW_TAG}|" "$FILE"
-  #         # Git config
-  #         git config user.name "${GIT_USER_NAME}"
-  #         git config user.email "${GIT_USER_EMAIL}"
-  #         # Check if file actually changed before committing
-  #         if git diff --quiet -- "$FILE"; then
-  #           echo "✅ No changes detected in $FILE — skipping commit & push."
-  #           exit 0
-  #         fi
-  #         git add "$FILE"
-  #         if git diff --cached --quiet; then
-  #           echo "✅ Nothing new to commit — skipping push."
-  #           exit 0
-  #         fi
-  #         git commit -m "chore(DEV): bump new version ${NEW_TAG} of blog image ${IMAGE}"
-  #         git push origin ${{ github.ref }}
+      - name: Update image tag in target file
+        #working-directory: gitops
+        id: update
+        env:
+          FILE: "apps/blog/dev/frontend/blog-ui-deployment.yaml"
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/np/ui"
+          NEW_TAG: ${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
+          
+        run: |
+          set -euo pipefail
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR target file not found: $FILE"
+            exit 1
+          fi
+          NEW_IMAGE="${IMAGE}:${NEW_TAG}"
+          sed -E -i "s|850756192530\.dkr\.ecr\.us-east-1\.amazonaws\.com/dwp(/np)?/ui:[^[:space:]]+|${NEW_IMAGE}|g" "$FILE"
+          # Git config
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          # Check if file actually changed before committing
+          if git diff --quiet -- "$FILE"; then
+            echo "✅ No changes detected in $FILE — skipping commit & push."
+            exit 0
+          fi
+          git add "$FILE"
+          if git diff --cached --quiet; then
+            echo "✅ Nothing new to commit — skipping push."
+            exit 0
+          fi
+          git commit -m "chore(DEV): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
+          git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
-      
-  
+
+  deploy-QA:
+    needs: [maven, docker, deploy-DEV]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+      - name: Checkout gitops repo
+        uses: actions/checkout@v4
+        with:
+          repository: "devopswithprashant/k8-blogApp"
+          token: ${{ secrets.GHEC_TOKEN_K8 }}
+          ref: ${{ env.GITOPS_BRANCH_NAME }}
+          fetch-depth: 10
+
+      - name: Update image tag in target file
+        #working-directory: gitops
+        id: update
+        env:
+          FILE: "apps/blog/qa/frontend/blog-ui-deployment.yaml"
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/np/ui"
+          NEW_TAG: ${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR target file not found: $FILE"
+            exit 1
+          fi
+          NEW_IMAGE="${IMAGE}:${NEW_TAG}"
+          sed -E -i "s|850756192530\.dkr\.ecr\.us-east-1\.amazonaws\.com/dwp(/np)?/ui:[^[:space:]]+|${NEW_IMAGE}|g" "$FILE"
+          # Git config
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          # Check if file actually changed before committing
+          if git diff --quiet -- "$FILE"; then
+            echo "✅ No changes detected in $FILE — skipping commit & push."
+            exit 0
+          fi
+          git add "$FILE"
+          if git diff --cached --quiet; then
+            echo "✅ Nothing new to commit — skipping push."
+            exit 0
+          fi
+          git commit -m "chore(QA): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
+          git push origin ${{ env.GITOPS_BRANCH_NAME }}
+
+          sleep 120
+
+  deploy-STAGE:
+    needs: [maven, docker, deploy-QA]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+      - name: Checkout gitops repo
+        uses: actions/checkout@v4
+        with:
+          repository: "devopswithprashant/k8-blogApp"
+          token: ${{ secrets.GHEC_TOKEN_K8 }}
+          ref: ${{ env.GITOPS_BRANCH_NAME }}
+          fetch-depth: 10
+
+      - name: Update image tag in target file
+        #working-directory: gitops
+        id: update
+        env:
+          FILE: "apps/blog/stage/backend/blog-deployment.yaml"
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
+          NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
+        run: |
+          set -euo pipefail
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR target file not found: $FILE"
+            exit 1
+          fi
+          sed -i -E "s|(image:\s*850756192530\.dkr\.ecr\.us-east-1\.amazonaws\.com/dwp/ui:)[^[:space:]]+|\1${NEW_TAG}|" "$FILE"
+          # Git config
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          # Check if file actually changed before committing
+          if git diff --quiet -- "$FILE"; then
+            echo "✅ No changes detected in $FILE — skipping commit & push."
+            exit 0
+          fi
+          git add "$FILE"
+          if git diff --cached --quiet; then
+            echo "✅ Nothing new to commit — skipping push."
+            exit 0
+          fi
+          git commit -m "chore(STAGE): bump UI new version ${NEW_TAG} of blog image ${IMAGE}"
+          git push origin ${{ env.GITOPS_BRANCH_NAME }}
+
+          sleep 120
+
+  deploy-PROD:
+    needs: [maven, docker, deploy-STAGE]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+      - name: Checkout gitops repo
+        uses: actions/checkout@v4
+        with:
+          repository: "devopswithprashant/k8-blogApp"
+          token: ${{ secrets.GHEC_TOKEN_K8 }}
+          ref: ${{ env.GITOPS_BRANCH_NAME }}
+          fetch-depth: 10
+
+      - name: Update image tag in target file
+        #working-directory: gitops
+        id: update
+        env:
+          FILE: "apps/blog/prod/backend/blog-deployment.yaml"
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
+          NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
+        run: |
+          set -euo pipefail
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR target file not found: $FILE"
+            exit 1
+          fi
+          sed -i -E "s|(image:\s*850756192530\.dkr\.ecr\.us-east-1\.amazonaws\.com/dwp/ui:)[^[:space:]]+|\1${NEW_TAG}|" "$FILE"
+          # Git config
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          # Check if file actually changed before committing
+          if git diff --quiet -- "$FILE"; then
+            echo "✅ No changes detected in $FILE — skipping commit & push."
+            exit 0
+          fi
+          git add "$FILE"
+          if git diff --cached --quiet; then
+            echo "✅ Nothing new to commit — skipping push."
+            exit 0
+          fi
+          git commit -m "chore(PROD): bump UI new version ${NEW_TAG} of blog image ${IMAGE}"
+          git push origin ${{ env.GITOPS_BRANCH_NAME }}
+
+
