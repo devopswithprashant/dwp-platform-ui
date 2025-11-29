@@ -18,11 +18,11 @@
     <distributionManagement>
 		<repository>
 			<id>myreleaserepo</id>
-			<url>http://13.220.180.0:8082/artifactory/myorg-release-local/</url>
+			<url>http://54.172.99.178:8082/artifactory/myorg-release-local/</url>
 		</repository>
 		<snapshotRepository>
 			<id>mysnapshotrepo</id>
-			<url>http://13.220.180.0:8082/artifactory/myorg-snapshot-local/</url>
+			<url>http://54.172.99.178:8082/artifactory/myorg-snapshot-local/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
