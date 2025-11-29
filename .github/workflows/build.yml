@@ -189,7 +189,7 @@ jobs:
             echo "✅ Nothing new to commit — skipping push."
             exit 0
           fi
-          git commit -m "chore(DEV): bump new version ${NEW_TAG} of blog ui image ${IMAGE}"
+          git commit -m "chore(DEV): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
 
@@ -238,7 +238,7 @@ jobs:
             echo "✅ Nothing new to commit — skipping push."
             exit 0
           fi
-          git commit -m "chore(QA): bump new version ${NEW_TAG} of blog ui image ${IMAGE}"
+          git commit -m "chore(QA): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
       
