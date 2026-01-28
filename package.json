@@ -1,46 +1,28 @@
 {
-  "name": "react-frontend-blog",
+  "name": "blog-ui",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.8.4",
-    "date-fns": "^4.1.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.4.1",
-    "react-scripts": "^5.0.1",
-    "web-vitals": "^2.1.4"
-  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
-    "eslint": "^8.57.1"
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
