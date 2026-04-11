@@ -79,7 +79,7 @@ jobs:
     
     - name: Run Tests
       run: |
-        mvn test --file pom.xml -B
+        mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
     
     - name: Run Linting
       run: |

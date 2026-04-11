@@ -20,4 +20,5 @@ sleep 2
 
 # Start Next.js standalone
 echo "[*] Starting Next.js server on port 3000..."
+cd /app
 exec node .next/standalone/server.js
