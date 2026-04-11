@@ -73,13 +73,28 @@ jobs:
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     
-    - name: Install dependencies, Run tests and lint
+    - name: Clean and Install Dependencies
       run: |
-        mvn clean test verify --file pom.xml -B
-
-    - name: Build and package
+        mvn clean validate generate-resources --file pom.xml -B
+    
+    - name: Run Tests
       run: |
-        mvn prepare-package --file pom.xml -DskipTests -B
+        mvn test --file pom.xml -B
+    
+    - name: Run Linting
+      run: |
+        mvn verify -DskipTests --file pom.xml -B
+    
+    - name: Build Application
+      run: |
+        mvn prepare-package -DskipTests --file pom.xml -B
+    
+    - name: Publish to Artifactory
+      run: |
+        mvn deploy -DskipTests --file pom.xml -B
+    
+    - name: Display build artifacts
+      run: |
         ls -la target/
     
     - name: Upload build artifact (target/)
@@ -87,10 +102,7 @@ jobs:
       with:
         name: build-target
         # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-        path: target/* 
-    
-    - name: Publish
-      run: mvn deploy --file pom.xml -DskipTests -B
+        path: target/*
 
 
   docker:
