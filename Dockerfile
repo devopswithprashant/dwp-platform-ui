@@ -40,14 +40,11 @@ COPY entrypoint.sh /app/entrypoint.sh
 
 RUN chmod +x /app/entrypoint.sh
 
-# Set permissions
-RUN chown -R node:node /app && \
-    chown -R node:node /var/log/nginx && \
-    chown -R node:node /var/cache/nginx && \
-    chown -R node:node /run/nginx && \
-    chmod -R 755 /var/cache/nginx /var/log/nginx /run/nginx
+# Set permissions - only for directories we control
+RUN chown -R root:root /app && \
+    chmod -R 755 /app
 
-USER node
+USER root
 
 # Nginx on 80, Next.js on 3000
 EXPOSE 80 3000
