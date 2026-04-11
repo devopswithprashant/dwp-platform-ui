@@ -37,7 +37,7 @@ describe('Blog API Functions', () => {
 
       expect(result).toEqual(mockBlogs)
       expect(result).toHaveLength(2)
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/api/blogs')
+      expect(global.fetch).toHaveBeenCalledWith('/api/blogs')
     })
 
     it('should handle API response with content wrapper', async () => {
@@ -109,7 +109,7 @@ describe('Blog API Functions', () => {
       expect(result).toEqual(mockContent)
       expect(result.postId).toBe(1)
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/1/content'
+        '/api/blogs/1/content'
       )
     })
 
@@ -130,7 +130,7 @@ describe('Blog API Functions', () => {
       await fetchBlogContent(5)
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/5/content'
+        '/api/blogs/5/content'
       )
     })
   })
@@ -160,7 +160,7 @@ describe('Blog API Functions', () => {
 
       expect(result).toEqual(mockResponse)
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs',
+        '/api/blogs',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -217,7 +217,7 @@ describe('Blog API Functions', () => {
       await updateBlog(1, request)
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/1',
+        '/api/blogs/1',
         expect.objectContaining({
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -270,7 +270,7 @@ describe('Blog API Functions', () => {
       await updateBlog(42, request)
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/42',
+        '/api/blogs/42',
         expect.any(Object)
       )
     })
@@ -285,7 +285,7 @@ describe('Blog API Functions', () => {
       await deleteBlog(1)
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/1',
+        '/api/blogs/1',
         expect.objectContaining({
           method: 'DELETE',
         })
@@ -320,7 +320,7 @@ describe('Blog API Functions', () => {
       await deleteBlog(42)
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/blogs/42',
+        '/api/blogs/42',
         expect.any(Object)
       )
     })
