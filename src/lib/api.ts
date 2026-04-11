@@ -5,8 +5,9 @@ import {
   UpdateBlogRequest,
 } from "./types";
 
-//const API_BASE_URL = process.env.NEXT_PUBLIC_BLOG_API_URL || "http://localhost:8080";
-const API_BASE_URL = "http://localhost:8080/api";
+// Use local /api endpoint which Nginx proxies to backend
+// Can be overridden with NEXT_PUBLIC_BLOG_API_URL for external backends
+const API_BASE_URL = process.env.NEXT_PUBLIC_BLOG_API_URL || "/api";
 
 export async function fetchBlogs(): Promise<BlogMetadata[]> {
   console.log("Fetching blogs from:", `${API_BASE_URL}/blogs`);

@@ -1,20 +1,15 @@
 # ---------- builder stage: unzip artifacts ----------
 FROM alpine:3.18 AS builder
 
-# install unzip (kept only in builder)
 RUN apk add --no-cache unzip
 
-# Create app dir
 WORKDIR /app
 
-# Copy zip from build context (fails build if no match)
 COPY target/*.zip /tmp/app.zip
 
-# Unzip into /app/build (handle single top-level dir)
 RUN set -eux; \
     mkdir -p /app/build; \
     unzip -q /tmp/app.zip -d /tmp/unzipdir; \
-    # If archive has a single top-level directory, move its contents.
     FIRST="$(ls -A /tmp/unzipdir | head -n 1 || true)"; \
     if [ -n "$FIRST" ] && [ -d "/tmp/unzipdir/$FIRST" ] && [ "$(ls -A /tmp/unzipdir | wc -l)" -eq 1 ]; then \
       mv /tmp/unzipdir/"$FIRST"/* /app/build/ || true; \
@@ -23,25 +18,44 @@ RUN set -eux; \
     fi; \
     rm -rf /tmp/app.zip /tmp/unzipdir
 
-# ---------- final stage: nginx serving unzipped content ----------
-FROM nginx:stable-alpine3.20-perl
+# ---------- final stage: Nginx + Node.js ----------
+FROM node:22-alpine
 
-# Copy custom Nginx configuration (optional)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Clean default content
-RUN rm -rf /usr/share/nginx/html/*
+# Copy the unzipped build from builder
+COPY --from=builder /app/build .
 
-# Copy the unzipped build from the builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
+# Install Nginx and envsubst
+RUN apk add --no-cache nginx curl gettext
 
-# Ensure correct permissions (nginx user)
-RUN chown -R nginx:nginx /usr/share/nginx/html
+# Create Nginx config directory
+RUN mkdir -p /etc/nginx/conf.d
 
-# Optional debug - remove in production
-RUN ls -la /usr/share/nginx/html || true
+# Copy Nginx config template
+COPY nginx.conf /etc/nginx/nginx.conf.template
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
+
+# Set permissions
+RUN chown -R node:node /app && \
+    chown -R node:node /var/log/nginx && \
+    chown -R node:node /var/cache/nginx && \
+    chown -R node:node /run/nginx && \
+    chmod -R 755 /var/cache/nginx /var/log/nginx /run/nginx
+
+USER node
+
+# Nginx on 80, Next.js on 3000
+EXPOSE 80 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+CMD ["/app/entrypoint.sh"]
 
 
