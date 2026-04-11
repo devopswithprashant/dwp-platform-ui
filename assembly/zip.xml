@@ -20,19 +20,15 @@
         <include>**/*</include>
       </includes>
     </fileSet>
-    <!-- Essential configuration and metadata files -->
+    <!-- Nginx and entrypoint configuration -->
     <fileSet>
       <directory>${project.basedir}</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>package.json</include>
         <include>package-lock.json</include>
-        <include>next.config.ts</include>
-        <include>tsconfig.json</include>
-        <include>tailwind.config.ts</include>
-        <include>postcss.config.mjs</include>
-        <include>eslint.config.mjs</include>
-        <include>README.md</include>
+        <include>nginx.conf</include>
+        <include>entrypoint.sh</include>
       </includes>
     </fileSet>
   </fileSets>

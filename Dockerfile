@@ -26,23 +26,18 @@ WORKDIR /app
 # Copy the unzipped build from builder
 COPY --from=builder /app/build .
 
-# Install Nginx and envsubst
-RUN apk add --no-cache nginx curl gettext
+# Install Nginx and gettext for envsubst
+RUN apk add --no-cache nginx gettext
 
-# Create Nginx config directory
-RUN mkdir -p /etc/nginx/conf.d
-
-# Copy Nginx config template
-COPY nginx.conf /etc/nginx/nginx.conf.template
+# Copy Nginx config as template
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 # Copy entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-RUN chmod +x /app/entrypoint.sh
-
-# Set permissions - only for directories we control
-RUN chown -R root:root /app && \
-    chmod -R 755 /app
+# Set permissions
+RUN chown -R root:root /app && chmod -R 755 /app
 
 USER root
 
@@ -51,8 +46,8 @@ EXPOSE 80 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:80/health || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:80/health || exit 1
 
-CMD ["/app/entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 
