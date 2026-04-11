@@ -1,4 +1,6 @@
 
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <section className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-16 md:flex-row md:items-center">
@@ -20,18 +22,18 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <a
+          <Link
             href="/blogs"
             className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             Read the blog
-          </a>
-          <a
+          </Link>
+          <Link
             href="/blogs/new"
             className="inline-flex items-center rounded-full border border-gray-300 bg-white/70 px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:hover:bg-gray-900"
           >
             Write a post
-          </a>
+          </Link>
         </div>
       </div>
 

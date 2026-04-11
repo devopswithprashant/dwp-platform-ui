@@ -110,7 +110,7 @@ describe('Blog Platform Utilities', () => {
     })
 
     it('should check if array is empty', () => {
-      const isEmpty = (arr: any[]) => arr.length === 0
+      const isEmpty = (arr: unknown[]) => arr.length === 0
 
       expect(isEmpty([])).toBe(true)
       expect(isEmpty([1, 2, 3])).toBe(false)
@@ -128,7 +128,7 @@ describe('Blog Platform Utilities', () => {
     })
 
     it('should check if blog has required fields', () => {
-      const hasRequiredFields = (blog: any) => {
+      const hasRequiredFields = (blog: Record<string, unknown>) => {
         return !!(blog.title && blog.markdown && typeof blog.title === 'string')
       }
 
@@ -152,7 +152,7 @@ describe('Blog Platform Utilities', () => {
     })
 
     it('should paginate results', () => {
-      const paginate = (items: any[], page: number, perPage: number) => {
+      const paginate = (items: unknown[], page: number, perPage: number) => {
         return items.slice((page - 1) * perPage, page * perPage)
       }
 
