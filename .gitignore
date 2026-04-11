@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/node
 /.pnp
 .pnp.*
 .yarn/*
@@ -21,6 +22,7 @@
 
 # production
 /build
+/target
 
 # misc
 .DS_Store

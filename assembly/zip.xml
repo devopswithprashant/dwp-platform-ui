@@ -4,11 +4,35 @@
     <format>zip</format>
   </formats>
   <fileSets>
+    <!-- Next.js build output -->
     <fileSet>
-      <directory>${project.basedir}/build</directory>
-      <outputDirectory>/</outputDirectory>
+      <directory>${project.basedir}/.next</directory>
+      <outputDirectory>/.next</outputDirectory>
       <includes>
         <include>**/*</include>
+      </includes>
+    </fileSet>
+    <!-- Public assets -->
+    <fileSet>
+      <directory>${project.basedir}/public</directory>
+      <outputDirectory>/public</outputDirectory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+    <!-- Essential configuration and metadata files -->
+    <fileSet>
+      <directory>${project.basedir}</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>package.json</include>
+        <include>package-lock.json</include>
+        <include>next.config.ts</include>
+        <include>tsconfig.json</include>
+        <include>tailwind.config.ts</include>
+        <include>postcss.config.mjs</include>
+        <include>eslint.config.mjs</include>
+        <include>README.md</include>
       </includes>
     </fileSet>
   </fileSets>
