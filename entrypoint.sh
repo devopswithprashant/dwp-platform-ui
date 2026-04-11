@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e
 
-# Export defaults if not set
-BACKEND_SERVICE_HOST="${BACKEND_SERVICE_HOST:-blog-service}"
-BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-9090}"
+# Export defaults if not set (MUST be exported for envsubst to find them)
+export BACKEND_SERVICE_HOST="${BACKEND_SERVICE_HOST:-blog-service}"
+export BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-9090}"
 
 echo "[*] Backend Service: $BACKEND_SERVICE_HOST:$BACKEND_SERVICE_PORT"
 
