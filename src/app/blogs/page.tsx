@@ -1,8 +1,21 @@
 import { fetchBlogs } from "@/lib/api";
 import Link from "next/link";
+import type { BlogMetadata } from "@/lib/types";
+
+// Disable static generation for this page - fetch data at request time instead
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function BlogsPage() {
-  const blogs = await fetchBlogs();
+  let blogs: BlogMetadata[] = [];
+  let error: string | null = null;
+
+  try {
+    blogs = await fetchBlogs();
+  } catch (err) {
+    console.error("Failed to fetch blogs:", err);
+    error = err instanceof Error ? err.message : "Failed to load blogs";
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
@@ -20,6 +33,13 @@ export default async function BlogsPage() {
           Create Blog
         </Link>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Error loading blogs</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
 
       <ul className="space-y-4">
         {blogs && blogs.length > 0 ? (

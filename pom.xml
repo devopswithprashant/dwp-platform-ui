@@ -52,7 +52,7 @@
                         </configuration>
                     </execution>
 
-
+                    <!-- Step 2: NPM CI -->
                     <execution>
                         <id>npm-ci</id>
                         <goals>
@@ -64,17 +64,7 @@
                         </configuration>
                     </execution>
 
-                    <!-- Step 3: Lint -->
-                    <execution>
-                        <id>npm-lint</id>
-                        <goals><goal>npm</goal></goals>
-                        <phase>verify</phase>
-                        <configuration>
-                            <arguments>run lint</arguments>
-                        </configuration>
-                    </execution>
-
-                    <!-- Step 4: Build -->
+                    <!-- Step 3: Test -->
                     <execution>
                         <id>npm-test</id>
                         <goals>
@@ -83,6 +73,16 @@
                         <phase>test</phase>
                         <configuration>
                             <arguments>test -- --watchAll=false</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Step 4: Lint -->
+                    <execution>
+                        <id>npm-lint</id>
+                        <goals><goal>npm</goal></goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <arguments>run lint</arguments>
                         </configuration>
                     </execution>
 
