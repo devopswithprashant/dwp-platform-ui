@@ -5,6 +5,8 @@ WORKDIR /app
 
 # Copy and unzip the Maven artifact
 COPY target/*.zip /tmp/app.zip
+COPY nginx.conf /app/nginx.conf
+COPY entrypoint.sh /app/entrypoint.sh
 RUN unzip -q /tmp/app.zip -d /app && rm /tmp/app.zip
 
 # Install Nginx and gettext for envsubst
