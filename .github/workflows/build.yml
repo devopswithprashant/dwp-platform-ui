@@ -87,11 +87,7 @@ jobs:
     
     - name: Build Application
       run: |
-        mvn prepare-package -DskipTests --file pom.xml -B
-    
-    - name: Publish to Artifactory
-      run: |
-        mvn deploy -DskipTests --file pom.xml -B
+        mvn package -DskipTests --file pom.xml -B
     
     - name: Display build artifacts
       run: |
@@ -103,6 +99,10 @@ jobs:
         name: build-target
         # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
         path: target/*
+    
+    - name: Publish to Artifactory
+      run: |
+        mvn deploy -DskipTests --file pom.xml -B
 
 
   docker:
