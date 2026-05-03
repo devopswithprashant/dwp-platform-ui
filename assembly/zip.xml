@@ -4,11 +4,31 @@
     <format>zip</format>
   </formats>
   <fileSets>
+    <!-- Next.js build output -->
     <fileSet>
-      <directory>${project.basedir}/build</directory>
-      <outputDirectory>/</outputDirectory>
+      <directory>${project.basedir}/.next</directory>
+      <outputDirectory>/.next</outputDirectory>
       <includes>
         <include>**/*</include>
+      </includes>
+    </fileSet>
+    <!-- Public assets -->
+    <fileSet>
+      <directory>${project.basedir}/public</directory>
+      <outputDirectory>/public</outputDirectory>
+      <includes>
+        <include>**/*</include>
+      </includes>
+    </fileSet>
+    <!-- Nginx and entrypoint configuration -->
+    <fileSet>
+      <directory>${project.basedir}</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>package.json</include>
+        <include>package-lock.json</include>
+        <include>nginx.conf</include>
+        <include>entrypoint.sh</include>
       </includes>
     </fileSet>
   </fileSets>

@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  --background-light: #f9fafb;
+  --foreground-light: #020617;
+  --background-dark: #020617;
+  --foreground-dark: #e5e7eb;
+  --background: var(--background-light);
+  --foreground: var(--foreground-light);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--background-dark);
+    --foreground: var(--foreground-dark);
+  }
+}
+
+:root[data-theme="light"] {
+  --background: var(--background-light);
+  --foreground: var(--foreground-light);
+}
+
+:root[data-theme="dark"] {
+  --background: var(--background-dark);
+  --foreground: var(--foreground-dark);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "SF Pro Icons", "Segoe UI", sans-serif;
+}

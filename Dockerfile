@@ -1,47 +1,28 @@
-# ---------- builder stage: unzip artifacts ----------
-FROM alpine:3.18 AS builder
+FROM node:22-alpine
 
-# install unzip (kept only in builder)
-RUN apk add --no-cache unzip
-
-# Create app dir
 WORKDIR /app
 
-# Copy zip from build context (fails build if no match)
+# Copy and unzip the Maven artifact
 COPY target/*.zip /tmp/app.zip
+RUN apk add --no-cache unzip && \
+    unzip -q /tmp/app.zip -d /tmp/app_extracted && rm /tmp/app.zip && \
+    cp -a /tmp/app_extracted/*/. /app/ && \
+    rm -rf /tmp/app_extracted
 
-# Unzip into /app/build (handle single top-level dir)
-RUN set -eux; \
-    mkdir -p /app/build; \
-    unzip -q /tmp/app.zip -d /tmp/unzipdir; \
-    # If archive has a single top-level directory, move its contents.
-    FIRST="$(ls -A /tmp/unzipdir | head -n 1 || true)"; \
-    if [ -n "$FIRST" ] && [ -d "/tmp/unzipdir/$FIRST" ] && [ "$(ls -A /tmp/unzipdir | wc -l)" -eq 1 ]; then \
-      mv /tmp/unzipdir/"$FIRST"/* /app/build/ || true; \
-    else \
-      mv /tmp/unzipdir/* /app/build/ || true; \
-    fi; \
-    rm -rf /tmp/app.zip /tmp/unzipdir
+# Install Nginx and gettext for envsubst
+RUN apk add --no-cache nginx gettext
 
-# ---------- final stage: nginx serving unzipped content ----------
-FROM nginx:stable-alpine3.20-perl
+# Copy nginx template to conf.d (entrypoint writes final to http.d)
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Copy custom Nginx configuration (optional)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-# Clean default content
-RUN rm -rf /usr/share/nginx/html/*
+RUN chown -R root:root /app && chmod -R 755 /app
 
-# Copy the unzipped build from the builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80 3000
 
-# Ensure correct permissions (nginx user)
-RUN chown -R nginx:nginx /usr/share/nginx/html
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:80/health || exit 1
 
-# Optional debug - remove in production
-RUN ls -la /usr/share/nginx/html || true
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-
-
+ENTRYPOINT ["/app/entrypoint.sh"]

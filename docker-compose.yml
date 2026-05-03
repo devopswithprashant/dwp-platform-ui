@@ -2,14 +2,18 @@ version: '3.8'
 
 services:
   frontend-app:
-    image: test-react-dock:latest
+    image: dwp-ui:latest
     ports:
       - 4200:80
+    environment:
+      # Backend service configuration
+      BACKEND_SERVICE_HOST: backendapi
+      BACKEND_SERVICE_PORT: 8080
     depends_on:
       backendapi:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -18,8 +22,6 @@ services:
   
   backendapi:
     image: spring-app
-    # ports:
-    #   - "9090:9090"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/devblogdb?serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: devuser
@@ -27,6 +29,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - blog-app-network
 

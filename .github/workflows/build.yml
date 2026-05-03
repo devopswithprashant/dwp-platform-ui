@@ -5,8 +5,6 @@ name: Build
 
 on:
   push:
-    branches:
-      - "*"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +33,7 @@ env:
   ECR_REPOSITORY: dwp/np/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
-  GITOPS_BRANCH_NAME: "feat-ui-cd"
+  GITOPS_BRANCH_NAME: "feat/revamp"
 
 
 
@@ -47,6 +45,9 @@ jobs:
     outputs:
       projectVersion: ${{ steps.project_version.outputs.version }}
     steps:
+
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
     - name: Setup Maven Action
       uses: s4u/setup-maven-action@v1.19.0
@@ -72,14 +73,24 @@ jobs:
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     
-    - name: Lint
+    - name: Clean and Install Dependencies
       run: |
-        mvn validate generate-resources verify
-        mvn frontend:npm -Darguments="run lint"
-
-    - name: Build
+        mvn clean validate generate-resources --file pom.xml -B
+    
+    - name: Run Tests
       run: |
-        mvn clean package --file pom.xml -DskipTests -B
+        mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+    
+    - name: Run Linting
+      run: |
+        mvn verify -DskipTests --file pom.xml -B
+    
+    - name: Build Application
+      run: |
+        mvn package -DskipTests --file pom.xml -B
+    
+    - name: Display build artifacts
+      run: |
         ls -la target/
     
     - name: Upload build artifact (target/)
@@ -88,12 +99,10 @@ jobs:
         name: build-target
         # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
         path: target/*
-
-    - name: Test
-      run: mvn clean test 
     
-    - name: Publish
-      run: mvn clean deploy --file pom.xml -DskipTests -B
+    - name: Publish to Artifactory
+      run: |
+        mvn deploy -DskipTests --file pom.xml -B
 
 
   docker:
