@@ -6,6 +6,10 @@
 
 A lightweight React.js frontend for a blog application. It provides pages to list blogs, view blog details, create and edit blog posts, plus a marketing-style home page and a small reusable component for human-friendly timestamps.
 
+## Logging (ELK-compatible)
+
+See `docs/logging.md`.
+
 ### Key features:
 - List all blog posts
 - Read a single blog with edit/delete actions
