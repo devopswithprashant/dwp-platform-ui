@@ -35,7 +35,7 @@ env:
   ECR_REPOSITORY: dwp/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
-  GITOPS_BRANCH_NAME: "feat/argoCD"
+  GITOPS_BRANCH_NAME: "feat/revamp"
 
 
 
