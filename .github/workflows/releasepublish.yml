@@ -152,8 +152,8 @@ jobs:
         id: update
         env:
           FILE: "apps/blog/dev/frontend/blog-ui-deployment.yaml"
-          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/np/ui"
-          NEW_TAG: ${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
+          NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
           
         run: |
           set -euo pipefail
@@ -201,8 +201,8 @@ jobs:
         id: update
         env:
           FILE: "apps/blog/qa/frontend/blog-ui-deployment.yaml"
-          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/np/ui"
-          NEW_TAG: ${{ needs.maven.outputs.projectVersion }}-${{ github.sha }}
+          IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
+          NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
         run: |
           set -euo pipefail
           if [ ! -f "$FILE" ]; then
