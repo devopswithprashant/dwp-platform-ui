@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 import type { CreateBlogRequest, UpdateBlogRequest } from "@/lib/types";
-import { createBlog, updateBlog } from "@/lib/api";
+import { createBlog, updateBlog } from "@/lib/api.client";
 import { preserveExtraBlankLines } from "@/lib/markdown";
 
 type Mode = "create" | "edit";
