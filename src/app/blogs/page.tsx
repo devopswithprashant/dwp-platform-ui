@@ -1,4 +1,4 @@
-import { fetchBlogs } from "@/lib/api";
+import { fetchBlogs } from "@/lib/api.server";
 import Link from "next/link";
 import type { BlogMetadata } from "@/lib/types";
 

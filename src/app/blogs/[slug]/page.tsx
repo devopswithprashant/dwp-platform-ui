@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { fetchBlogContent, fetchBlogs } from "@/lib/api";
+import { fetchBlogContent, fetchBlogs } from "@/lib/api.server";
 import DeleteBlogButton from "@/app/blogs/_components/DeleteBlogButton";
 import { preserveExtraBlankLines } from "@/lib/markdown";
 

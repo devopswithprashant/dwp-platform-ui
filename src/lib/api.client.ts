@@ -1,26 +1,14 @@
-import {
-  BlogMetadata,
+import type {
   BlogContent,
+  BlogMetadata,
   CreateBlogRequest,
   UpdateBlogRequest,
 } from "./types";
-import { getLogger } from "./logging/getLogger";
+import { createClientLogger } from "./logging/client";
 
-// Use local /api endpoint which Nginx proxies to backend
-// Can be overridden with NEXT_PUBLIC_BLOG_API_URL for external backends
-//const getApiBaseUrl() = process.env.NEXT_PUBLIC_BLOG_API_URL || "/api";
+const logger = createClientLogger();
 
-// After — absolute URL for SSR, relative for browser
-const getApiBaseUrl = () => {
-  // Browser: relative URL, nginx proxies /api/* → backend
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_BLOG_API_URL || "/api";
-  }
-  // SSR (Node.js server): must use absolute URL, goes direct to backend
-  const host = process.env.BACKEND_SERVICE_HOST || "blog-service";
-  const port = process.env.BACKEND_SERVICE_PORT || "9090";
-  return `http://${host}:${port}/api`;
-};
+const getApiBaseUrl = () => process.env.NEXT_PUBLIC_BLOG_API_URL || "/api";
 
 type FetchMeta = {
   "event.action": string;
@@ -36,7 +24,6 @@ async function loggedFetch(
   input: string,
   init?: RequestInit
 ): Promise<Response> {
-  const logger = await getLogger();
   if (process.env.NODE_ENV === "test") {
     // Keep calls stable for unit tests (no header mutation / wrapping).
     return init ? fetch(input, init) : fetch(input);
@@ -105,9 +92,7 @@ export async function fetchBlogs(): Promise<BlogMetadata[]> {
   return result;
 }
 
-export async function fetchBlogContent(
-  blogId: number
-): Promise<BlogContent> {
+export async function fetchBlogContent(blogId: number): Promise<BlogContent> {
   const url = `${getApiBaseUrl()}/blogs/${blogId}/content`;
   const res = await loggedFetch("fetchBlogContent", url);
 
@@ -164,3 +149,4 @@ export async function deleteBlog(blogId: number): Promise<void> {
     throw new Error(text || "Failed to delete blog");
   }
 }
+

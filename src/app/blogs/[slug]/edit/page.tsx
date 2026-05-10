@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import BlogEditor from "@/app/blogs/_components/BlogEditor";
-import { fetchBlogContent, fetchBlogs } from "@/lib/api";
+import { fetchBlogContent, fetchBlogs } from "@/lib/api.server";
 
 export default async function EditBlogPage({
   params,

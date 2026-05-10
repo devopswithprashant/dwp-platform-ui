@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteBlog } from "@/lib/api";
+import { deleteBlog } from "@/lib/api.client";
 
 export default function DeleteBlogButton({ blogId }: { blogId: number }) {
   const router = useRouter();
