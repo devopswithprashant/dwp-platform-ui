@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 30s
+      scrape_timeout: 10s
+      evaluation_interval: 30s
+      external_labels:
+        cluster: dwp-platform
+        monitor: prometheus
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: dwp-platform-ui-nextjs
+        metrics_path: /api/metrics
+        static_configs:
+          - targets:
+              - dwp-platform-ui.dwp-platform.svc.cluster.local:3000
+            labels:
+              app: dwp-platform-ui
+              component: nextjs
+
+      - job_name: dwp-platform-ui-nginx
+        static_configs:
+          - targets:
+              - dwp-platform-ui.dwp-platform.svc.cluster.local:9113
+            labels:
+              app: dwp-platform-ui
+              component: nginx
+
+      - job_name: blackbox-ui-health
+        metrics_path: /probe
+        params:
+          module: [http_2xx]
+        static_configs:
+          - targets:
+              - http://dwp-platform-ui.dwp-platform.svc.cluster.local/health
+            labels:
+              probe: ui-health
+          - targets:
+              - http://dwp-platform-ui.dwp-platform.svc.cluster.local/
+            labels:
+              probe: ui-home
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: blackbox-exporter.monitoring.svc.cluster.local:9115

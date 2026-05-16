@@ -3,7 +3,7 @@ set -e
 
 # ── Environment defaults ────────────────────────────────────────────
 export BACKEND_SERVICE_HOST="${BACKEND_SERVICE_HOST:-blog-service}"
-export BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-9090}"
+export BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-8080}"
 export HOSTNAME="0.0.0.0"
 export PORT="3000"
 

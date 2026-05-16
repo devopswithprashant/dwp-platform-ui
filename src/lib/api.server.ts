@@ -7,11 +7,12 @@ import type {
   UpdateBlogRequest,
 } from "./types";
 import { serverLogger as logger } from "./logging/server";
+import { recordHttpClientMetrics } from "./metrics/httpClient";
 
 // SSR (Node.js server): must use absolute URL, goes direct to backend
 const getApiBaseUrl = () => {
   const host = process.env.BACKEND_SERVICE_HOST || "blog-service";
-  const port = process.env.BACKEND_SERVICE_PORT || "9090";
+  const port = process.env.BACKEND_SERVICE_PORT || "8080";
   return `http://${host}:${port}/api`;
 };
 
@@ -69,9 +70,12 @@ async function loggedFetch(
       logger.warn(done, "http.response");
     }
 
+    recordHttpClientMetrics(operation, method, res.status, durationMs / 1000);
+
     return res;
   } catch (err) {
     const durationMs = Date.now() - started;
+    recordHttpClientMetrics(operation, method, "error", durationMs / 1000);
     logger.error(
       {
         ...meta,

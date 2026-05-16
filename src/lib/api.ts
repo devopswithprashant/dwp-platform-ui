@@ -18,7 +18,7 @@ const getApiBaseUrl = () => {
   }
   // SSR (Node.js server): must use absolute URL, goes direct to backend
   const host = process.env.BACKEND_SERVICE_HOST || "blog-service";
-  const port = process.env.BACKEND_SERVICE_PORT || "9090";
+  const port = process.env.BACKEND_SERVICE_PORT || "8080";
   return `http://${host}:${port}/api`;
 };
 

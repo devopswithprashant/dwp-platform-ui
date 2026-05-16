@@ -59,7 +59,7 @@ For outbound HTTP calls (`src/lib/api.ts`), we log:
   "event.action": "fetchBlogs",
   "trace.id": "7d2e6e5a-7b27-49e3-a63e-0a2bf9f8a34a",
   "http.request.method": "GET",
-  "url.full": "http://blog-service:9090/api/blogs",
+  "url.full": "http://blog-service:8080/api/blogs",
   "http.response.status_code": 200,
   "event.duration": 112000000
 }
