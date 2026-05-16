@@ -12,7 +12,7 @@ See `docs/logging.md`.
 
 ## Metrics (Prometheus + Grafana)
 
-See `docs/metrics.md`. Kubernetes manifests: `k8s/`.
+See `docs/metrics.md`. UI manifests: `k8s/`. Central Prometheus/Grafana: `monitoring/`.
 
 ### Key features:
 - List all blog posts

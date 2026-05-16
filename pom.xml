@@ -109,7 +109,7 @@
                         <descriptor>assembly/zip.xml</descriptor>
                     </descriptors>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <finalNamePrefix>${project.artifactId}-${project.version}</finalNamePrefix>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
                 </configuration>
                 <executions>
                     <execution>

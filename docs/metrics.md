@@ -44,19 +44,27 @@ Prometheus probes via Blackbox exporter:
 
 Probe results appear as `probe_success`, `probe_duration_seconds`, etc.
 
-Configured in `k8s/monitoring/prometheus-configmap.yaml` job `blackbox-ui-health`.
+Configured in `monitoring/prometheus-configmap.yaml` job `blackbox-dwp-platform-ui`.
 
 ---
 
 ## Kubernetes
 
-Apply all manifests:
+**Central monitoring stack** (Prometheus + Grafana + Blackbox):
+
+```bash
+kubectl apply -k monitoring/
+```
+
+**UI workload** (separate):
 
 ```bash
 kubectl apply -k k8s/
 ```
 
-See `k8s/README.md` for port-forwards, central Prometheus integration, and production notes.
+Prometheus in `monitoring/` discovers UI pods via Kubernetes SD (`dwp-platform-ui`, `dwp-platform-ui-nginx`) and probes the UI Service via Blackbox (`blackbox-dwp-platform-ui`).
+
+See `k8s/README.md` for UI deployment details and port-forwards.
 
 ---
 

@@ -1,10 +1,6 @@
 import "server-only";
 
-import {
-  httpClientErrorsTotal,
-  httpClientRequestDurationSeconds,
-  httpClientRequestsTotal,
-} from "./server";
+import { getUiMetrics } from "./server";
 
 export function recordHttpClientMetrics(
   operation: string,
@@ -15,6 +11,12 @@ export function recordHttpClientMetrics(
   if (process.env.NODE_ENV === "test") {
     return;
   }
+
+  const {
+    httpClientRequestsTotal,
+    httpClientRequestDurationSeconds,
+    httpClientErrorsTotal,
+  } = getUiMetrics();
 
   const statusLabel = statusCode === "error" ? "error" : String(statusCode);
 

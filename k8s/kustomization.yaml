@@ -7,14 +7,5 @@ resources:
   - ui/service.yaml
   # Uncomment if Prometheus Operator is installed:
   # - ui/servicemonitor.yaml
-  - monitoring/prometheus-configmap.yaml
-  - monitoring/prometheus-rbac.yaml
-  - monitoring/prometheus-deployment.yaml
-  - monitoring/prometheus-service.yaml
-  - monitoring/blackbox-configmap.yaml
-  - monitoring/blackbox-deployment.yaml
-  - monitoring/blackbox-service.yaml
-  - monitoring/grafana-configmap.yaml
-  - monitoring/grafana-secret.yaml
-  - monitoring/grafana-deployment.yaml
-  - monitoring/grafana-service.yaml
+
+# Central Prometheus + Grafana + Blackbox: kubectl apply -k monitoring/

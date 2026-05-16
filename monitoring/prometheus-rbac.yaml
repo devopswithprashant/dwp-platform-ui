@@ -10,13 +10,19 @@ metadata:
   name: prometheus
 rules:
   - apiGroups: [""]
-    resources: [nodes, nodes/metrics, services, endpoints, pods]
-    verbs: [get, list, watch]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
   - apiGroups: [""]
-    resources: [configmaps]
-    verbs: [get]
-  - nonResourceURLs: [/metrics]
-    verbs: [get]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

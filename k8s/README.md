@@ -1,6 +1,6 @@
 # Kubernetes manifests — UI metrics, Prometheus, Grafana
 
-Manifests for deploying **dwp-platform-ui** with Prometheus metrics and a minimal **monitoring** stack (Prometheus, Grafana, Blackbox exporter).
+Manifests for deploying **dwp-platform-ui**. The central **monitoring** stack (Prometheus, Grafana, Blackbox) lives in [`monitoring/`](../monitoring/).
 
 ## Layout
 
@@ -10,9 +10,7 @@ Manifests for deploying **dwp-platform-ui** with Prometheus metrics and a minima
 | `ui/deployment.yaml` | UI container + **nginx-prometheus-exporter** sidecar |
 | `ui/service.yaml` | Ports `80` (HTTP), `3000` (Next.js metrics), `9113` (Nginx metrics) |
 | `ui/servicemonitor.yaml` | Optional — for [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) |
-| `monitoring/prometheus-*.yaml` | Prometheus with scrape jobs for UI, Nginx, Blackbox probes |
-| `monitoring/blackbox-*.yaml` | Synthetic HTTP probes (`/health`, `/`) |
-| `monitoring/grafana-*.yaml` | Grafana with Prometheus datasource |
+| [`monitoring/`](../monitoring/) | Central Prometheus, Grafana, Blackbox (scrapes UI + blog-service) |
 
 ## Prerequisites
 
@@ -23,7 +21,11 @@ Manifests for deploying **dwp-platform-ui** with Prometheus metrics and a minima
 ## Apply
 
 ```bash
+# UI + namespaces
 kubectl apply -k k8s/
+
+# Central Prometheus + Grafana (scrapes UI metrics)
+kubectl apply -k monitoring/
 ```
 
 ## Access (port-forward)
@@ -46,13 +48,9 @@ kubectl -n monitoring port-forward svc/prometheus 9090:9090
 
 Nginx `stub_status` is exposed at `/nginx_status` (localhost only). The sidecar scrapes it on `127.0.0.1:80`.
 
-## Central Prometheus
+## Central Prometheus elsewhere
 
-To use an **existing** central Prometheus instead of the bundled one:
-
-1. Skip `monitoring/prometheus-*.yaml` (or delete from `kustomization.yaml`).
-2. Add scrape configs from `monitoring/prometheus-configmap.yaml` to your central Prometheus.
-3. Apply `ui/deployment.yaml`, `ui/service.yaml`, and optionally `ui/servicemonitor.yaml` if you run Prometheus Operator.
+If Prometheus runs outside this repo, copy scrape jobs from `monitoring/prometheus-configmap.yaml` (`dwp-platform-ui`, `dwp-platform-ui-nginx`, `blackbox-dwp-platform-ui`) into your server config.
 
 ## Production notes
 

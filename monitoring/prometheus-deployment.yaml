@@ -18,39 +18,38 @@ spec:
       serviceAccountName: prometheus
       containers:
         - name: prometheus
-          image: prom/prometheus:v3.2.1
+          image: prom/prometheus:v2.54.1
           args:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.path=/prometheus
             - --web.enable-lifecycle
-            - --storage.tsdb.retention.time=15d
           ports:
-            - name: http
-              containerPort: 9090
+            - containerPort: 9090
+              name: http
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
             - name: data
               mountPath: /prometheus
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           readinessProbe:
             httpGet:
               path: /-/ready
-              port: http
+              port: 9090
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /-/healthy
-              port: http
+              port: 9090
             initialDelaySeconds: 30
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 200m
-              memory: 512Mi
-            limits:
-              cpu: "1"
-              memory: 2Gi
+            periodSeconds: 15
       volumes:
         - name: config
           configMap:
