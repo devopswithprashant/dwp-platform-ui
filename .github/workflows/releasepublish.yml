@@ -35,7 +35,7 @@ env:
   ECR_REPOSITORY: dwp/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
-  GITOPS_BRANCH_NAME: "feat/elk-charts"
+  GITOPS_BRANCH_NAME: "feat/monitoring"
 
 
 
@@ -151,7 +151,7 @@ jobs:
         #working-directory: gitops
         id: update
         env:
-          FILE: "apps/blog/dev/frontend/blog-ui-deployment.yaml"
+          FILE: "env/dev/dwp-ui-deployment.yaml"
           IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
           NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
           
@@ -200,7 +200,7 @@ jobs:
         #working-directory: gitops
         id: update
         env:
-          FILE: "apps/blog/qa/frontend/blog-ui-deployment.yaml"
+          FILE: "env/qa/dwp-ui-deployment.yaml"
           IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
           NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
         run: |
@@ -249,7 +249,7 @@ jobs:
         #working-directory: gitops
         id: update
         env:
-          FILE: "apps/blog/stage/frontend/blog-ui-deployment.yaml"
+          FILE: "env/stage/dwp-ui-deployment.yaml"
           IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
           NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
         run: |
@@ -297,7 +297,7 @@ jobs:
         #working-directory: gitops
         id: update
         env:
-          FILE: "apps/blog/prod/frontend/blog-ui-deployment.yaml"
+          FILE: "env/prod/dwp-ui-deployment.yaml"
           IMAGE: "850756192530.dkr.ecr.us-east-1.amazonaws.com/dwp/ui"
           NEW_TAG: "v${{ needs.maven.outputs.projectVersion }}"
         run: |

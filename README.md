@@ -10,6 +10,10 @@ A lightweight React.js frontend for a blog application. It provides pages to lis
 
 See `docs/logging.md`.
 
+## Metrics (Prometheus + Grafana)
+
+See `docs/metrics.md`. UI manifests: `k8s/`. Central Prometheus/Grafana: `monitoring/`.
+
 ### Key features:
 - List all blog posts
 - Read a single blog with edit/delete actions

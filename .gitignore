@@ -23,6 +23,7 @@
 # production
 /build
 /target
+/public
 
 # misc
 .DS_Store
