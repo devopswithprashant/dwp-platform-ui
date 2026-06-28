@@ -1,9 +1,8 @@
-import ReactMarkdown from "react-markdown";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fetchBlogContent, fetchBlogs } from "@/lib/api.server";
 import DeleteBlogButton from "@/app/blogs/_components/DeleteBlogButton";
-import { preserveExtraBlankLines } from "@/lib/markdown";
+import BlogMarkdown from "@/app/blogs/_components/BlogMarkdown";
 
 export default async function BlogPage({
   params,
@@ -12,7 +11,6 @@ export default async function BlogPage({
 }) {
   const { slug } = await params;
 
-  // Resolve slug -> blog id, then fetch content by id
   const blogs = await fetchBlogs();
   const meta = blogs.find((b) => b.slug === slug);
   if (!meta) notFound();
@@ -20,8 +18,8 @@ export default async function BlogPage({
   const blog = await fetchBlogContent(meta.id);
 
   return (
-    <main className="prose mx-auto max-w-4xl px-4 py-10 dark:prose-invert">
-      <div className="not-prose mb-6 flex flex-wrap items-center justify-between gap-3">
+    <main className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
         <div className="flex items-center gap-2">
           <Link
@@ -33,7 +31,7 @@ export default async function BlogPage({
           <DeleteBlogButton blogId={meta.id} />
         </div>
       </div>
-      <ReactMarkdown>{preserveExtraBlankLines(blog.content)}</ReactMarkdown>
+      <BlogMarkdown content={blog.content} />
     </main>
   );
 }
