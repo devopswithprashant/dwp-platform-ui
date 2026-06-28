@@ -1,4 +1,10 @@
-import { preserveExtraBlankLines } from '../markdown'
+import { normalizeMarkdown, preserveExtraBlankLines, resolveBlogContentText } from '../markdown'
+
+function createEditorState(markdown: string) {
+  return {
+    getText: () => markdown,
+  }
+}
 
 describe('Markdown Utilities', () => {
   describe('preserveExtraBlankLines', () => {
@@ -60,6 +66,42 @@ describe('Markdown Utilities', () => {
       const input = 'Line 1\n\nLine 2'
       const result = preserveExtraBlankLines(input)
       expect(result).not.toContain('\u00A0')
+    })
+  })
+
+  describe('normalizeMarkdown', () => {
+    it('normalizes line endings and trims surrounding whitespace', () => {
+      const input = '\r\n\r\nHello world\r\n\r\n'
+      const result = normalizeMarkdown(input)
+      expect(result).toBe('Hello world')
+    })
+
+    it('preserves internal line breaks while trimming edges', () => {
+      const input = '\nHello\nworld\n'
+      const result = normalizeMarkdown(input)
+      expect(result).toBe('Hello\nworld')
+    })
+  })
+
+  describe('resolveBlogContentText', () => {
+    it('returns a plain string unchanged', () => {
+      expect(resolveBlogContentText('# Title')).toBe('# Title')
+    })
+
+    it('reads content from API payloads', () => {
+      expect(resolveBlogContentText({ content: 'Hello **world**' })).toBe('Hello **world**')
+    })
+
+    it('falls back to markdown or body fields', () => {
+      expect(resolveBlogContentText({ markdown: '# From markdown' })).toBe('# From markdown')
+      expect(resolveBlogContentText({ body: 'From body' })).toBe('From body')
+    })
+  })
+
+  describe('editor state handling', () => {
+    it('returns plain text from the editor state', () => {
+      const state = createEditorState('Hello world')
+      expect(state.getText()).toBe('Hello world')
     })
   })
 })
