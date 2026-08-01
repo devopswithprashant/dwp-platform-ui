@@ -4,6 +4,7 @@ import type {
   CreateBlogRequest,
   UpdateBlogRequest,
 } from '../types'
+import { extractAccessToken, parseAuthUser } from '../auth/types'
 
 describe('Blog Types', () => {
   it('should create a valid BlogMetadata object', () => {
@@ -66,5 +67,31 @@ describe('Blog Types', () => {
 
     expect(request.title).toBe('Updated Blog')
     expect(request.markdown).toBe('# Updated Content')
+  })
+
+  it('should extract a token from a nested auth response payload', () => {
+    const token = extractAccessToken({
+      data: {
+        accessToken: 'nested-token-value',
+      },
+    })
+
+    expect(token).toBe('nested-token-value')
+  })
+
+  it('should parse a user from a nested auth profile payload', () => {
+    const user = parseAuthUser({
+      data: {
+        id: 42,
+        username: 'mohit',
+        email: 'mohit@example.com',
+      },
+    })
+
+    expect(user).toEqual({
+      id: 42,
+      username: 'mohit',
+      email: 'mohit@example.com',
+    })
   })
 })

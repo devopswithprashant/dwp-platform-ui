@@ -14,6 +14,10 @@ jest.mock("@/lib/api.client", () => ({
   updateBlog: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock("@/lib/auth/auth.client", () => ({
+  fetchCurrentUser: jest.fn().mockResolvedValue({ id: 1, username: "test", email: "test@example.com" }),
+}));
+
 jest.mock("lowlight", () => ({
   createLowlight: jest.fn(() => ({})),
   common: {},
@@ -119,8 +123,10 @@ describe("BlogEditor", () => {
     });
   });
 
-  it("renders the editor toolbar and title input", () => {
-    render(<BlogEditor mode="create" />);
+  it("renders the editor toolbar and title input", async () => {
+    await act(async () => {
+      render(<BlogEditor mode="create" initialAuthorId={1} />);
+    });
 
     expect(screen.getByPlaceholderText(/kubernetes/i)).toBeInTheDocument();
     expect(screen.getByTitle("Bold")).toBeInTheDocument();
@@ -129,7 +135,9 @@ describe("BlogEditor", () => {
 
   it("toggles a bullet list from the toolbar", async () => {
     const user = userEvent.setup();
-    render(<BlogEditor mode="create" />);
+    await act(async () => {
+      render(<BlogEditor mode="create" initialAuthorId={1} />);
+    });
 
     await user.click(screen.getByTitle("Bullet list"));
 
@@ -138,7 +146,9 @@ describe("BlogEditor", () => {
 
   it("enables submit when editor content is present", async () => {
     const user = userEvent.setup();
-    render(<BlogEditor mode="create" />);
+    await act(async () => {
+      render(<BlogEditor mode="create" initialAuthorId={1} />);
+    });
 
     await user.type(screen.getByPlaceholderText(/kubernetes/i), "A new post");
     editorInstance.isEmpty = false;
@@ -151,8 +161,10 @@ describe("BlogEditor", () => {
     expect(screen.getByRole("button", { name: /create/i })).not.toBeDisabled();
   });
 
-  it("initializes the editor with markdown content type", () => {
-    render(<BlogEditor mode="edit" blogId={1} initialMarkdown="# Hello" />);
+  it("initializes the editor with markdown content type", async () => {
+    await act(async () => {
+      render(<BlogEditor mode="edit" blogId={1} initialMarkdown="# Hello" />);
+    });
 
     expect(mockUseEditor).toHaveBeenCalledWith(
       expect.objectContaining({

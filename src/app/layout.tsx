@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeToggle from "./_components/ThemeToggle";
+import AuthNav from "./_components/AuthNav";
+import { getAuthUser } from "@/lib/auth/auth.server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,11 +21,13 @@ export const metadata: Metadata = {
   description: "A blog platform about DevOps, Cloud, and Software Engineering.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getAuthUser();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -52,6 +56,7 @@ export default function RootLayout({
               </Link>
             </div>
             <div className="flex items-center justify-end gap-3">
+              <AuthNav initialUser={user} />
               <ThemeToggle />
             </div>
           </nav>

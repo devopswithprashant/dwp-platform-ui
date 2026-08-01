@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { CreateBlogRequest, UpdateBlogRequest } from "@/lib/types";
 import { createBlog, updateBlog } from "@/lib/api.client";
+import { fetchCurrentUser } from "@/lib/auth/auth.client";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 
 type Mode = "create" | "edit";
@@ -21,11 +22,25 @@ export default function BlogEditor(props: {
   const editorRef = useRef<RichTextEditorHandle>(null);
 
   const [title, setTitle] = useState(props.initialTitle ?? "");
-  const [authorId, setAuthorId] = useState<number>(props.initialAuthorId ?? 1);
+  const [authorId, setAuthorId] = useState<number | null>(
+    props.initialAuthorId ?? null,
+  );
   const [hasContent, setHasContent] = useState(() =>
     Boolean(props.initialMarkdown?.trim()),
   );
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props.mode !== "create" || authorId !== null) return;
+
+    void fetchCurrentUser().then((user) => {
+      if (user) {
+        setAuthorId(user.id);
+      } else {
+        router.push("/login?callbackUrl=/blogs/new");
+      }
+    });
+  }, [props.mode, authorId, router]);
 
   const handleContentChange = useCallback((isEmpty: boolean) => {
     setHasContent((current) => {
@@ -36,7 +51,7 @@ export default function BlogEditor(props: {
 
   const canSubmit = useMemo(() => {
     const commonValid = title.trim().length > 0 && hasContent;
-    if (props.mode === "create") return commonValid && Number.isFinite(authorId);
+    if (props.mode === "create") return commonValid && authorId !== null;
     return commonValid && Number.isFinite(props.blogId);
   }, [title, hasContent, authorId, props.mode, props.blogId]);
 
@@ -51,7 +66,7 @@ export default function BlogEditor(props: {
         if (props.mode === "create") {
           const payload: CreateBlogRequest = {
             title: title.trim(),
-            authorId,
+            authorId: authorId!,
             markdown,
           };
           await createBlog(payload);
@@ -86,22 +101,12 @@ export default function BlogEditor(props: {
           />
         </label>
 
-        {props.mode === "create" ? (
-          <label>
-            <span className="mb-2 block text-sm font-medium">Author ID</span>
-            <input
-              value={authorId}
-              onChange={(e) => setAuthorId(Number(e.target.value))}
-              inputMode="numeric"
-              className="w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-800"
-            />
-          </label>
-        ) : (
+        {props.mode === "edit" ? (
           <div className="rounded-xl border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300">
             <div className="font-medium text-gray-900 dark:text-gray-100">Editing</div>
             <div className="mt-1">Blog ID: {props.blogId}</div>
           </div>
-        )}
+        ) : null}
       </div>
 
       <RichTextEditor

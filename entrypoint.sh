@@ -4,13 +4,16 @@ set -e
 # ── Environment defaults ────────────────────────────────────────────
 export BACKEND_SERVICE_HOST="${BACKEND_SERVICE_HOST:-blog-service}"
 export BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-8080}"
+export AUTH_SERVICE_HOST="${AUTH_SERVICE_HOST:-auth-service}"
+export AUTH_SERVICE_PORT="${AUTH_SERVICE_PORT:-8081}"
 export HOSTNAME="0.0.0.0"
 export PORT="3000"
 
 echo "[*] Backend  : $BACKEND_SERVICE_HOST:$BACKEND_SERVICE_PORT"
+echo "[*] Auth     : $AUTH_SERVICE_HOST:$AUTH_SERVICE_PORT"
 
 # ── Generate Nginx config from template ─────────────────────────────
-envsubst '${BACKEND_SERVICE_HOST} ${BACKEND_SERVICE_PORT}' \
+envsubst '${BACKEND_SERVICE_HOST} ${BACKEND_SERVICE_PORT} ${AUTH_SERVICE_HOST} ${AUTH_SERVICE_PORT}' \
     < /etc/nginx/conf.d/default.conf.template \
     > /etc/nginx/http.d/default.conf
 
