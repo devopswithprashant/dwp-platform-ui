@@ -32,17 +32,18 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 
+
 # ==========================================
-# STAGE 3: Minimal Production Runtime (~110-130 MB)
+# STAGE 3: Minimal Production Runtime
 # ==========================================
-FROM node:22-alpine AS runner
+FROM alpine:3.20 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install lightweight Nginx and gettext for envsubst
-RUN apk add --no-cache nginx gettext
+# Install bare Node.js runtime (no npm/yarn/pnpm bloat) and Nginx
+RUN apk add --no-cache nodejs nginx gettext
 
 # Pre-create Nginx & cache folders with permissive runtime permissions
 RUN mkdir -p /etc/nginx/conf.d \
@@ -53,25 +54,17 @@ RUN mkdir -p /etc/nginx/conf.d \
              /app/.next/cache && \
     chmod -R 777 /var/cache/nginx /var/log/nginx /var/run /etc/nginx/conf.d /etc/nginx/http.d /app
 
-
-# Copy standalone output and static assets
+# Copy standalone server & required static assets from builder
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# Copy public folder safely (will not fail if public directory does not exist)
 COPY --from=builder /app/public* ./public/
-
 
 # Copy Nginx configuration template and runtime entrypoint
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 COPY entrypoint.sh /app/entrypoint.sh
 
-# Set execution rights
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 80 3000
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:80/health || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]
