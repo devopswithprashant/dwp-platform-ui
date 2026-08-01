@@ -1,5 +1,5 @@
 export interface AuthUser {
-  id: number;
+  id: number | string;
   username: string;
   email: string;
 }
@@ -57,11 +57,16 @@ export function parseAuthUser(data: unknown): AuthUser | null {
     seen.add(current);
 
     const obj = current as Record<string, unknown>;
-    const id = typeof obj.id === "number" ? obj.id : Number(obj.id);
-    const username = typeof obj.username === "string" ? obj.username : "";
-    const email = typeof obj.email === "string" ? obj.email : "";
+    const rawId = obj.id;
+    const id = typeof rawId === "number"
+      ? rawId
+      : typeof rawId === "string" && rawId.trim()
+        ? rawId
+        : null;
+    const username = typeof obj.username === "string" ? obj.username.trim() : "";
+    const email = typeof obj.email === "string" ? obj.email.trim() : "";
 
-    if (Number.isFinite(id) && username) {
+    if (id !== null && username) {
       return { id, username, email };
     }
 

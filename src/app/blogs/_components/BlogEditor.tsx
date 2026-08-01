@@ -22,8 +22,8 @@ export default function BlogEditor(props: {
   const editorRef = useRef<RichTextEditorHandle>(null);
 
   const [title, setTitle] = useState(props.initialTitle ?? "");
-  const [authorId, setAuthorId] = useState<number | null>(
-    props.initialAuthorId ?? null,
+  const [authorIdentity, setAuthorIdentity] = useState<string | null>(
+    props.initialAuthorId !== undefined ? String(props.initialAuthorId) : null,
   );
   const [hasContent, setHasContent] = useState(() =>
     Boolean(props.initialMarkdown?.trim()),
@@ -31,16 +31,24 @@ export default function BlogEditor(props: {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (props.mode !== "create" || authorId !== null) return;
+    if (props.mode !== "create" || authorIdentity !== null) return;
 
     void fetchCurrentUser().then((user) => {
       if (user) {
-        setAuthorId(user.id);
+        const resolvedAuthorIdentity = typeof user.id === "number"
+          ? String(user.id)
+          : typeof user.id === "string"
+            ? user.id
+            : null;
+
+        if (resolvedAuthorIdentity) {
+          setAuthorIdentity(resolvedAuthorIdentity);
+        }
       } else {
         router.push("/login?callbackUrl=/blogs/new");
       }
     });
-  }, [props.mode, authorId, router]);
+  }, [props.mode, authorIdentity, router]);
 
   const handleContentChange = useCallback((isEmpty: boolean) => {
     setHasContent((current) => {
@@ -51,9 +59,9 @@ export default function BlogEditor(props: {
 
   const canSubmit = useMemo(() => {
     const commonValid = title.trim().length > 0 && hasContent;
-    if (props.mode === "create") return commonValid && authorId !== null;
+    if (props.mode === "create") return commonValid;
     return commonValid && Number.isFinite(props.blogId);
-  }, [title, hasContent, authorId, props.mode, props.blogId]);
+  }, [title, hasContent, props.mode, props.blogId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,8 +74,8 @@ export default function BlogEditor(props: {
         if (props.mode === "create") {
           const payload: CreateBlogRequest = {
             title: title.trim(),
-            authorId: authorId!,
             markdown,
+            ...(authorIdentity ? { authorIdentity } : {}),
           };
           await createBlog(payload);
         } else {

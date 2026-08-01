@@ -30,7 +30,12 @@ async function authFetch(
   logger.debug({ "event.action": operation, "url.full": url, "http.request.method": method }, "http.request");
 
   try {
-    const res = await fetch(url, { ...init, headers });
+    const res = await fetch(url, {
+      ...init,
+      headers,
+      credentials: "same-origin",
+      cache: "no-store",
+    });
     const durationMs = Date.now() - started;
     const meta = {
       "event.action": operation,
@@ -82,9 +87,51 @@ export async function loginUser(payload: LoginRequest): Promise<void> {
 
   const data = await res.json();
   const token = extractAccessToken(data);
-  if (!token) {
+  const responsePreview = JSON.stringify(data).slice(0, 500);
+
+  logger.debug(
+    {
+      "event.action": "login",
+      "auth.token.present": token !== null,
+      "auth.token.length": token?.length ?? 0,
+      "auth.response.preview": responsePreview,
+    },
+    "auth.token.validation",
+  );
+
+  if (!token || typeof token !== "string") {
+    logger.error(
+      {
+        "event.action": "login",
+        "auth.validation.step": "A",
+        "auth.response.preview": responsePreview,
+      },
+      "Validation Failed: No token string found in response.",
+    );
     throw new Error("Login succeeded but no access token was returned");
   }
+
+  const jwtParts = token.split(".");
+  if (jwtParts.length !== 3) {
+    logger.error(
+      {
+        "event.action": "login",
+        "auth.validation.step": "B",
+        "auth.token.length": token.length,
+      },
+      "Validation Failed: The string received is not a valid 3-part JWT.",
+    );
+    throw new Error("Login succeeded but access token format was invalid");
+  }
+
+  logger.info(
+    {
+      "event.action": "login",
+      "auth.validation.step": "B",
+      "auth.token.parts": jwtParts.length,
+    },
+    "Validation Success: Valid JWT format received!",
+  );
 
   setAccessTokenCookie(token);
 }
@@ -95,6 +142,15 @@ export function logoutUser(): void {
 
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
   const token = getClientAccessToken();
+  logger.debug(
+    {
+      "event.action": "getMe",
+      "auth.cookie.present": token !== null,
+      "auth.token.length": token?.length ?? 0,
+    },
+    "auth.cookie.read",
+  );
+
   if (!token) return null;
 
   const res = await authFetch("getMe", "/me", {
@@ -103,6 +159,13 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
 
   if (res.status === 401) {
     clearAccessTokenCookie();
+    logger.warn(
+      {
+        "event.action": "getMe",
+        "auth.reason": "unauthorized",
+      },
+      "auth.profile.request.unauthorized",
+    );
     return null;
   }
 
@@ -111,5 +174,14 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   }
 
   const data = await res.json();
-  return parseAuthUser(data);
+  const user = parseAuthUser(data);
+  logger.debug(
+    {
+      "event.action": "getMe",
+      "auth.user.found": user !== null,
+      "auth.response.preview": JSON.stringify(data).slice(0, 500),
+    },
+    "auth.profile.parsed",
+  );
+  return user;
 }

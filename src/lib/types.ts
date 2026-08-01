@@ -15,7 +15,7 @@ export interface BlogContent {
 
 export interface CreateBlogRequest {
   title: string;
-  authorId: number;
+  authorIdentity?: string;
   markdown: string;
 }
 

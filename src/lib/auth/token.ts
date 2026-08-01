@@ -8,7 +8,7 @@ export function setAccessTokenCookie(token: string): void {
 
 export function clearAccessTokenCookie(): void {
   if (typeof document === "undefined") return;
-  document.cookie = `${ACCESS_TOKEN_COOKIE}=; path=/; max-age=0`;
+  document.cookie = `${ACCESS_TOKEN_COOKIE}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 }
 
 export function getAccessTokenFromCookieHeader(cookieHeader: string | undefined): string | null {
