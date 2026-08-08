@@ -4,6 +4,7 @@ import type {
   CreateBlogRequest,
   UpdateBlogRequest,
 } from '../types'
+import { extractAccessToken, parseAuthUser } from '../auth/types'
 
 describe('Blog Types', () => {
   it('should create a valid BlogMetadata object', () => {
@@ -49,12 +50,12 @@ describe('Blog Types', () => {
   it('should create a valid CreateBlogRequest', () => {
     const request: CreateBlogRequest = {
       title: 'New Blog',
-      authorId: 1,
+      authorIdentity: '101',
       markdown: '# New Blog\n\nContent here',
     }
 
     expect(request.title).toBe('New Blog')
-    expect(request.authorId).toBe(1)
+    expect(request.authorIdentity).toBe('101')
     expect(request.markdown).toContain('# New Blog')
   })
 
@@ -66,5 +67,47 @@ describe('Blog Types', () => {
 
     expect(request.title).toBe('Updated Blog')
     expect(request.markdown).toBe('# Updated Content')
+  })
+
+  it('should extract a token from a nested auth response payload', () => {
+    const token = extractAccessToken({
+      data: {
+        accessToken: 'nested-token-value',
+      },
+    })
+
+    expect(token).toBe('nested-token-value')
+  })
+
+  it('should parse a user from a nested auth profile payload', () => {
+    const user = parseAuthUser({
+      data: {
+        id: 42,
+        username: 'mohit',
+        email: 'mohit@example.com',
+      },
+    })
+
+    expect(user).toEqual({
+      id: 42,
+      username: 'mohit',
+      email: 'mohit@example.com',
+    })
+  })
+
+  it('should accept a UUID string user id from the auth service', () => {
+    const user = parseAuthUser({
+      data: {
+        id: 'a450d880-2bc6-4010-bc90-64a36c283b6e',
+        username: 'mohit',
+        email: 'mohit@example.com',
+      },
+    })
+
+    expect(user).toEqual({
+      id: 'a450d880-2bc6-4010-bc90-64a36c283b6e',
+      username: 'mohit',
+      email: 'mohit@example.com',
+    })
   })
 })

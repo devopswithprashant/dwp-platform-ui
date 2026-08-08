@@ -1,7 +1,7 @@
 # This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
 # For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
 
-name: Release Publish
+name: Release Build
 
 on:
   push:
@@ -35,7 +35,7 @@ env:
   ECR_REPOSITORY: dwp/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
-  GITOPS_BRANCH_NAME: "fix/blog-editor"
+  GITOPS_BRANCH_NAME: "feat/auth-integration"
 
 
 
@@ -47,40 +47,60 @@ jobs:
       projectVersion: ${{ steps.project_version.outputs.version }}
     steps:
 
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.19.0
-      with:
-          java-version: 17
-          java-distribution: 'temurin'
-          maven-version: 3.9.11
-          settings-servers: |
-            [{
-              "id": "myreleaserepo",
-              "username": "${env.ARTIFACTORY_RELEASE_USER}",
-              "password": "${env.ARTIFACTORY_RELEASE_KEY}"
-            },
-            {
-              "id": "mysnapshotrepo",
-              "username": "${env.ARTIFACTORY_DEV_USER}",
-              "password": "${env.ARTIFACTORY_DEV_KEY}"
-            }]
-    
-    - name: Get project version from POM
-      id: project_version
-      run: |
-        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-    
+      - name: Checkout repo
+        uses: actions/checkout@v6
 
-    - name: Release Publish
-      run: mvn clean deploy --file pom.xml -DskipTests -B
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.11
+
+    # - name: Setup Maven Action
+    #   uses: s4u/setup-maven-action@v1.19.0
+    #   with:
+    #       java-version: 17
+    #       java-distribution: 'temurin'
+    #       maven-version: 3.9.11
+    #       settings-servers: |
+    #         [{
+    #           "id": "myreleaserepo",
+    #           "username": "${env.ARTIFACTORY_RELEASE_USER}",
+    #           "password": "${env.ARTIFACTORY_RELEASE_KEY}"
+    #         },
+    #         {
+    #           "id": "mysnapshotrepo",
+    #           "username": "${env.ARTIFACTORY_DEV_USER}",
+    #           "password": "${env.ARTIFACTORY_DEV_KEY}"
+    #         }]
     
-    - name: Upload build artifact (target/)
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-target
-        # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-        path: target/*
+      - name: Get project version from POM
+        id: project_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Clean and Install Dependencies
+        run: |
+          mvn clean validate generate-resources --file pom.xml -B
+      
+      - name: Run Tests
+        run: |
+          mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+      
+      - name: Run Linting
+        run: |
+          mvn verify -DskipTests --file pom.xml -B
+      
+
+      # - name: Release Build
+      #   run: mvn clean install --file pom.xml -DskipTests -B
+      
+      # - name: Upload build artifact (target/)
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-target
+      #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
+      #     path: target/*
     
 
 
@@ -90,7 +110,7 @@ jobs:
     needs: maven
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
@@ -110,11 +130,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       # in docker job (download step)
-      - name: Download build artifact (target/)
-        uses: actions/download-artifact@v4
-        with:
-          name: build-target
-          path: target     # <--- downloads artifact contents into ./target
+      # - name: Download build artifact (target/)
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: build-target
+      #     path: target     # <--- downloads artifact contents into ./target
 
       - name: Build and push to ECR
         uses: docker/build-push-action@v6
@@ -140,7 +160,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -189,7 +209,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -227,7 +247,6 @@ jobs:
           git commit -m "chore(QA): bump UI new version ${NEW_TAG} of blog ui image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
-          sleep 320
 
   deploy-STAGE:
     needs: [maven, docker, deploy-QA]
@@ -238,7 +257,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -275,7 +294,6 @@ jobs:
           git commit -m "chore(STAGE): bump UI new version ${NEW_TAG} of blog image ${IMAGE}"
           git push origin ${{ env.GITOPS_BRANCH_NAME }}
 
-          sleep 320
 
   deploy-PROD:
     needs: [maven, docker, deploy-STAGE]
@@ -286,7 +304,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}

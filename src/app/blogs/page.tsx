@@ -1,4 +1,5 @@
 import { fetchBlogs } from "@/lib/api.server";
+import { getAuthUser } from "@/lib/auth/auth.server";
 import Link from "next/link";
 import type { BlogMetadata } from "@/lib/types";
 
@@ -9,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function BlogsPage() {
   let blogs: BlogMetadata[] = [];
   let error: string | null = null;
+  const user = await getAuthUser();
 
   try {
     blogs = await fetchBlogs();
@@ -26,12 +28,21 @@ export default async function BlogsPage() {
             Long-form notes and stories on DevOps, infra and systems.
           </p>
         </div>
-        <Link
-          href="/blogs/new"
-          className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
-        >
-          Create Blog
-        </Link>
+        {user ? (
+          <Link
+            href="/blogs/new"
+            className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
+          >
+            Create Blog
+          </Link>
+        ) : (
+          <Link
+            href="/login?callbackUrl=/blogs/new"
+            className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
+          >
+            Sign in to create
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -62,7 +73,7 @@ export default async function BlogsPage() {
         ) : (
           <p className="text-gray-500 dark:text-gray-400">
             No blogs yet. Be the first to{" "}
-            <Link href="/blogs/new" className="underline">
+            <Link href={user ? "/blogs/new" : "/login?callbackUrl=/blogs/new"} className="underline">
               write one
             </Link>
             .

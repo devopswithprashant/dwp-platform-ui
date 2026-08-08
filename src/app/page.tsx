@@ -1,7 +1,9 @@
-
 import Link from "next/link";
+import { getAuthUser } from "@/lib/auth/auth.server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getAuthUser();
+
   return (
     <section className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-16 md:flex-row md:items-center">
       <div className="flex-1 space-y-6">
@@ -29,7 +31,7 @@ export default function HomePage() {
             Read the blog
           </Link>
           <Link
-            href="/blogs/new"
+            href={user ? "/blogs/new" : "/login?callbackUrl=/blogs/new"}
             className="inline-flex items-center rounded-full border border-gray-300 bg-white/70 px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:hover:bg-gray-900"
           >
             Write a post

@@ -4,6 +4,7 @@ import type {
   CreateBlogRequest,
   UpdateBlogRequest,
 } from "./types";
+import { getClientAccessToken } from "./auth/token";
 import { createClientLogger } from "./logging/client";
 
 const logger = createClientLogger();
@@ -39,6 +40,11 @@ async function loggedFetch(
 
   const headers = new Headers(init?.headers);
   headers.set("x-request-id", requestId);
+
+  const token = getClientAccessToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
   const meta: FetchMeta = {
     "event.action": operation,
