@@ -33,7 +33,7 @@ env:
   ECR_REPOSITORY: dwp/np/ui            # <- change to your ECR repository name
   GIT_USER_NAME: "ci-bot"
   GIT_USER_EMAIL: "ci-bot@devopswithprashant.com"
-  GITOPS_BRANCH_NAME: "fix/blog-editor"
+  GITOPS_BRANCH_NAME: "feat/auth-integration"
 
 
 
@@ -87,7 +87,7 @@ jobs:
     
     - name: Build Application
       run: |
-        mvn package -DskipTests --file pom.xml -B
+        mvn clean install -DskipTests --file pom.xml -B
     
     - name: Display build artifacts
       run: |
@@ -99,10 +99,6 @@ jobs:
         name: build-target
         # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
         path: target/*
-    
-    - name: Publish to Artifactory
-      run: |
-        mvn deploy -DskipTests --file pom.xml -B
 
 
   docker:
