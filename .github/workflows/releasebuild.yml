@@ -47,52 +47,60 @@ jobs:
       projectVersion: ${{ steps.project_version.outputs.version }}
     steps:
 
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.19.0
-      with:
-          java-version: 17
-          java-distribution: 'temurin'
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
           maven-version: 3.9.11
-          settings-servers: |
-            [{
-              "id": "myreleaserepo",
-              "username": "${env.ARTIFACTORY_RELEASE_USER}",
-              "password": "${env.ARTIFACTORY_RELEASE_KEY}"
-            },
-            {
-              "id": "mysnapshotrepo",
-              "username": "${env.ARTIFACTORY_DEV_USER}",
-              "password": "${env.ARTIFACTORY_DEV_KEY}"
-            }]
-    
-    - name: Get project version from POM
-      id: project_version
-      run: |
-        VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Clean and Install Dependencies
-      run: |
-        mvn clean validate generate-resources --file pom.xml -B
-    
-    - name: Run Tests
-      run: |
-        mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
-    
-    - name: Run Linting
-      run: |
-        mvn verify -DskipTests --file pom.xml -B
-    
-
-    # - name: Release Build
-    #   run: mvn clean install --file pom.xml -DskipTests -B
-    
-    # - name: Upload build artifact (target/)
-    #   uses: actions/upload-artifact@v4
+    # - name: Setup Maven Action
+    #   uses: s4u/setup-maven-action@v1.19.0
     #   with:
-    #     name: build-target
-    #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-    #     path: target/*
+    #       java-version: 17
+    #       java-distribution: 'temurin'
+    #       maven-version: 3.9.11
+    #       settings-servers: |
+    #         [{
+    #           "id": "myreleaserepo",
+    #           "username": "${env.ARTIFACTORY_RELEASE_USER}",
+    #           "password": "${env.ARTIFACTORY_RELEASE_KEY}"
+    #         },
+    #         {
+    #           "id": "mysnapshotrepo",
+    #           "username": "${env.ARTIFACTORY_DEV_USER}",
+    #           "password": "${env.ARTIFACTORY_DEV_KEY}"
+    #         }]
+    
+      - name: Get project version from POM
+        id: project_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Clean and Install Dependencies
+        run: |
+          mvn clean validate generate-resources --file pom.xml -B
+      
+      - name: Run Tests
+        run: |
+          mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+      
+      - name: Run Linting
+        run: |
+          mvn verify -DskipTests --file pom.xml -B
+      
+
+      # - name: Release Build
+      #   run: mvn clean install --file pom.xml -DskipTests -B
+      
+      # - name: Upload build artifact (target/)
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: build-target
+      #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
+      #     path: target/*
     
 
 
