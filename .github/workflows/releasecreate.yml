@@ -39,31 +39,34 @@ jobs:
       projectVersion: ${{ steps.project_version.outputs.version }}
     steps:
 
-    # - name: Checkout repo
-    #   uses: actions/checkout@v6
-
-    # - name: Set up Maven
-    #   uses: stCarolas/setup-maven@v5
-    #   with:
-    #     maven-version: 3.9.11
-        
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.19.0
+    - name: Checkout repo
+      uses: actions/checkout@v6
       with:
-          java-version: 17
-          java-distribution: 'temurin'
-          maven-version: 3.9.11
-          settings-servers: |
-            [{
-              "id": "myreleaserepo",
-              "username": "${env.ARTIFACTORY_RELEASE_USER}",
-              "password": "${env.ARTIFACTORY_RELEASE_KEY}"
-            },
-            {
-              "id": "mysnapshotrepo",
-              "username": "${env.ARTIFACTORY_DEV_USER}",
-              "password": "${env.ARTIFACTORY_DEV_KEY}"
-            }]
+        fetch-depth: 0
+        token: ${{ secrets.GHEC_RELEASE_PAT }}
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: 3.9.11
+        
+    # - name: Setup Maven Action
+    #   uses: s4u/setup-maven-action@v1.19.0
+    #   with:
+    #       java-version: 17
+    #       java-distribution: 'temurin'
+    #       maven-version: 3.9.11
+    #       settings-servers: |
+    #         [{
+    #           "id": "myreleaserepo",
+    #           "username": "${env.ARTIFACTORY_RELEASE_USER}",
+    #           "password": "${env.ARTIFACTORY_RELEASE_KEY}"
+    #         },
+    #         {
+    #           "id": "mysnapshotrepo",
+    #           "username": "${env.ARTIFACTORY_DEV_USER}",
+    #           "password": "${env.ARTIFACTORY_DEV_KEY}"
+    #         }]
     
     - name: Get project version from POM
       id: project_version
@@ -77,6 +80,20 @@ jobs:
         git config user.name "devopswithprashant"
         PROJECT_VERSION=${{ steps.project_version.outputs.version }}
         ReleaseTagName="v${PROJECT_VERSION}"
+        
         mvn release:clean
-        mvn release:prepare -DreleaseVersion=${PROJECT_VERSION} -Dtag=${ReleaseTagName} -Dusername=devopswithprashant -Dpassword=${GHEC_RELEASE_PAT} -Darguments=-DskipTests -B -U
 
+        mvn release:prepare \
+        -DreleaseVersion=${PROJECT_VERSION} \
+        -Dtag=${ReleaseTagName} \
+        -Dusername=devopswithprashant \
+        -Dpassword=${GHEC_RELEASE_PAT} \
+        -Darguments=-DskipTests \
+        -DpushChanges=false \
+        -B -U
+
+        git push origin HEAD
+        git push origin tag ${ReleaseTagName}
+        
+        git config --unset user.name
+        git config --unset user.email
