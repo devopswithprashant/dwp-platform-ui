@@ -70,17 +70,29 @@ jobs:
       run: |
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Clean and Install Dependencies
+      run: |
+        mvn clean validate generate-resources --file pom.xml -B
+    
+    - name: Run Tests
+      run: |
+        mvn test --file pom.xml -B -Dorg.slf4j.simpleLogger.defaultLogLevel=info
+    
+    - name: Run Linting
+      run: |
+        mvn verify -DskipTests --file pom.xml -B
     
 
-    - name: Release Build
-      run: mvn clean install --file pom.xml -DskipTests -B
+    # - name: Release Build
+    #   run: mvn clean install --file pom.xml -DskipTests -B
     
-    - name: Upload build artifact (target/)
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-target
-        # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-        path: target/*
+    # - name: Upload build artifact (target/)
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: build-target
+    #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
+    #     path: target/*
     
 
 
@@ -90,7 +102,7 @@ jobs:
     needs: maven
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
@@ -110,11 +122,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       # in docker job (download step)
-      - name: Download build artifact (target/)
-        uses: actions/download-artifact@v4
-        with:
-          name: build-target
-          path: target     # <--- downloads artifact contents into ./target
+      # - name: Download build artifact (target/)
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: build-target
+      #     path: target     # <--- downloads artifact contents into ./target
 
       - name: Build and push to ECR
         uses: docker/build-push-action@v6
@@ -140,7 +152,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -189,7 +201,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -238,7 +250,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -286,7 +298,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}

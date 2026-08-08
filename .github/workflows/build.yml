@@ -47,7 +47,7 @@ jobs:
     steps:
 
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Maven Action
       uses: s4u/setup-maven-action@v1.19.0
@@ -85,20 +85,20 @@ jobs:
       run: |
         mvn verify -DskipTests --file pom.xml -B
     
-    - name: Build Application
-      run: |
-        mvn clean install -DskipTests --file pom.xml -B
+    # - name: Build Application
+    #   run: |
+    #     mvn clean install -DskipTests --file pom.xml -B
     
-    - name: Display build artifacts
-      run: |
-        ls -la target/
+    # - name: Display build artifacts
+    #   run: |
+    #     ls -la target/
     
-    - name: Upload build artifact (target/)
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-target
-        # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-        path: target/*
+    # - name: Upload build artifact (target/)
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: build-target
+    #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
+    #     path: target/*
 
 
   docker:
@@ -107,7 +107,7 @@ jobs:
     needs: maven
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
@@ -127,11 +127,11 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       # in docker job (download step)
-      - name: Download build artifact (target/)
-        uses: actions/download-artifact@v4
-        with:
-          name: build-target
-          path: target     # <--- downloads artifact contents into ./target
+      # - name: Download build artifact (target/)
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: build-target
+      #     path: target     # <--- downloads artifact contents into ./target
 
       - name: Build and push to ECR
         uses: docker/build-push-action@v6
@@ -158,7 +158,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
@@ -208,7 +208,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
       - name: Checkout gitops repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "devopswithprashant/k8-blogApp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
