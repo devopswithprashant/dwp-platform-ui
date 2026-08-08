@@ -7,7 +7,7 @@
 
     <packaging>pom</packaging>
 
-    <name>React Frontend</name>
+    <name>DevOps with Prashant UI</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
