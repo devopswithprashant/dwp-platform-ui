@@ -40,23 +40,31 @@ jobs:
       projectVersion: ${{ steps.project_version.outputs.version }}
     steps:
 
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.19.0
+    - name: Checkout repo
+      uses: actions/checkout@v6
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
       with:
-          java-version: 17
-          java-distribution: 'temurin'
-          maven-version: 3.9.11
-          settings-servers: |
-            [{
-              "id": "myreleaserepo",
-              "username": "${env.ARTIFACTORY_RELEASE_USER}",
-              "password": "${env.ARTIFACTORY_RELEASE_KEY}"
-            },
-            {
-              "id": "mysnapshotrepo",
-              "username": "${env.ARTIFACTORY_DEV_USER}",
-              "password": "${env.ARTIFACTORY_DEV_KEY}"
-            }]
+        maven-version: 3.9.11
+
+    # - name: Setup Maven Action
+    #   uses: s4u/setup-maven-action@v1.19.0
+    #   with:
+    #       java-version: 17
+    #       java-distribution: 'temurin'
+    #       maven-version: 3.9.11
+    #       settings-servers: |
+    #         [{
+    #           "id": "myreleaserepo",
+    #           "username": "${env.ARTIFACTORY_RELEASE_USER}",
+    #           "password": "${env.ARTIFACTORY_RELEASE_KEY}"
+    #         },
+    #         {
+    #           "id": "mysnapshotrepo",
+    #           "username": "${env.ARTIFACTORY_DEV_USER}",
+    #           "password": "${env.ARTIFACTORY_DEV_KEY}"
+    #         }]
     
     - name: Get project version from POM
       id: project_version
@@ -72,7 +80,6 @@ jobs:
     - name: Build
       run: |
         mvn clean package --file pom.xml -DskipTests -B
-        ls -la target/
   
     - name: Test
       run: mvn clean test 
