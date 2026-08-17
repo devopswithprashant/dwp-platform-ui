@@ -18,18 +18,25 @@ const config: Config = {
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
   modulePathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/target/'],
   watchPathIgnorePatterns: ['<rootDir>/.next/'],
-  collectCoverageFrom: [
-    'src/lib/auth/**/*.{ts,tsx}',
-    'src/app/_components/AuthNav.tsx',
-    'src/app/login/**/*.{ts,tsx}',
-    'src/app/register/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.{js,jsx,ts,tsx}',
-  ],
   collectCoverage: true,
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    // Exclude type declarations and interfaces
+    '!src/**/*.d.ts',
+    '!src/**/types.ts',
+    '!src/**/types/*.ts',
+    // Exclude Next.js boilerplate and route/proxy handlers if not unit-tested
+    '!src/proxy.ts',
+    '!src/app/layout.tsx',
+    '!src/app/api/**',
+    // Exclude test files themselves
+    '!src/**/__tests__/**',
+    '!src/**/*.test.{ts,tsx}',
+  ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'clover'],
   testResultsProcessor: 'jest-sonar-reporter',
+
   coverageThreshold: {
     global: {
       statements: 80,
