@@ -48,6 +48,9 @@ jobs:
 
     - name: Checkout repo
       uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      
 
     - name: Set up Maven
       uses: stCarolas/setup-maven@v5
@@ -91,6 +94,13 @@ jobs:
       run: |
         mvn verify -DskipTests --file pom.xml -B
     
+
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v8.1.0
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    
     # - name: Build Application
     #   run: |
     #     mvn clean install -DskipTests --file pom.xml -B
@@ -106,6 +116,7 @@ jobs:
     #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
     #     path: target/*
 
+      
 
   docker:
     if: ${{ !(github.event.head_commit && startsWith(github.event.head_commit.message, '[maven-release-plugin]')) }}
