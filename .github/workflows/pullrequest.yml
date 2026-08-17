@@ -3,8 +3,9 @@
 
 name: PR build check
 
-on: pull_request
-
+on:
+  pull_request_target: # Loads this workflow file from the base branch (e.g. main)
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
