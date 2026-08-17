@@ -26,6 +26,8 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
+  coverageReporters: ['lcov', 'text', 'text-summary'],
+  coverageDirectory: 'coverage',
   coverageThreshold: {
     global: {
       statements: 80,
