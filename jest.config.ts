@@ -26,8 +26,10 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
-  coverageReporters: ['lcov', 'text', 'text-summary'],
+  collectCoverage: true,
   coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'clover'],
+  testResultsProcessor: 'jest-sonar-reporter',
   coverageThreshold: {
     global: {
       statements: 80,
