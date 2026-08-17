@@ -56,25 +56,6 @@ jobs:
       uses: stCarolas/setup-maven@v5
       with:
         maven-version: 3.9.11
-
-
-    # - name: Setup Maven Action
-    #   uses: s4u/setup-maven-action@v1.19.0
-    #   with:
-    #       java-version: 17
-    #       java-distribution: 'temurin'
-    #       maven-version: 3.9.11
-    #       settings-servers: |
-    #         [{
-    #           "id": "myreleaserepo",
-    #           "username": "${env.ARTIFACTORY_RELEASE_USER}",
-    #           "password": "${env.ARTIFACTORY_RELEASE_KEY}"
-    #         },
-    #         {
-    #           "id": "mysnapshotrepo",
-    #           "username": "${env.ARTIFACTORY_DEV_USER}",
-    #           "password": "${env.ARTIFACTORY_DEV_KEY}"
-    #         }]
     
     - name: Get project version from POM
       id: project_version
@@ -103,20 +84,7 @@ jobs:
         args: >
           -Dsonar.projectVersion=${{ steps.project_version.outputs.version }}
     
-    # - name: Build Application
-    #   run: |
-    #     mvn clean install -DskipTests --file pom.xml -B
-    
-    # - name: Display build artifacts
-    #   run: |
-    #     ls -la target/
-    
-    # - name: Upload build artifact (target/)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: build-target
-    #     # upload whole target directory. Use a glob if you prefer only jar files (target/*.jar)
-    #     path: target/*
+
 
       
 
@@ -145,12 +113,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      # in docker job (download step)
-      # - name: Download build artifact (target/)
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: build-target
-      #     path: target     # <--- downloads artifact contents into ./target
 
       - name: Build and push to ECR
         uses: docker/build-push-action@v6
