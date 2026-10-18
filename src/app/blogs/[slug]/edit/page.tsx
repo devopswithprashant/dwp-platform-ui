@@ -1,6 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import BlogEditor from "@/app/blogs/_components/BlogEditor";
 import { fetchBlogContent, fetchBlogs } from "@/lib/api.server";
+import { getAuthUser } from "@/lib/auth/auth.server";
+import { getCurrentProfileUserId } from "@/lib/user-profiles.server";
 
 export default async function EditBlogPage({
   params,
@@ -9,9 +11,17 @@ export default async function EditBlogPage({
 }) {
   const { slug } = await params;
 
-  const blogs = await fetchBlogs();
+  const [blogs, user, currentProfileUserId] = await Promise.all([
+    fetchBlogs(),
+    getAuthUser(),
+    getCurrentProfileUserId(),
+  ]);
+  if (!user) redirect(`/login?callbackUrl=${encodeURIComponent(`/blogs/${slug}/edit`)}`);
   const meta = blogs.find((b) => b.slug === slug);
   if (!meta) notFound();
+  if (!meta.authorUuid || meta.authorUuid !== currentProfileUserId) {
+    redirect(`/blogs/${meta.slug}`);
+  }
 
   const content = await fetchBlogContent(meta.id);
 
@@ -36,4 +46,3 @@ export default async function EditBlogPage({
     </main>
   );
 }
-

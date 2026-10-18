@@ -5,6 +5,8 @@ export interface BlogMetadata {
   status: string;
   createdAt: string;
   publishedAt?: string;
+  authorId?: number | null;
+  authorUuid?: string | null;
 }
 
 export interface BlogContent {
@@ -15,7 +17,6 @@ export interface BlogContent {
 
 export interface CreateBlogRequest {
   title: string;
-  authorIdentity?: string;
   markdown: string;
 }
 

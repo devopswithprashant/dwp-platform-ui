@@ -50,12 +50,11 @@ describe('Blog Types', () => {
   it('should create a valid CreateBlogRequest', () => {
     const request: CreateBlogRequest = {
       title: 'New Blog',
-      authorIdentity: '101',
       markdown: '# New Blog\n\nContent here',
     }
 
     expect(request.title).toBe('New Blog')
-    expect(request.authorIdentity).toBe('101')
+    expect('authorIdentity' in request).toBe(false)
     expect(request.markdown).toContain('# New Blog')
   })
 

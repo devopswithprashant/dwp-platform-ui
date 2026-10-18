@@ -1,21 +1,25 @@
 import { act } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BlogEditor from "../BlogEditor";
+import { BlogServiceError, createBlog } from "@/lib/api.client";
 
 const mockUseEditor = jest.fn();
+const mockPush = jest.fn();
+const mockRouter = { push: mockPush, back: jest.fn(), refresh: jest.fn() };
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useRouter: () => mockRouter,
 }));
 
 jest.mock("@/lib/api.client", () => ({
   createBlog: jest.fn().mockResolvedValue(undefined),
   updateBlog: jest.fn().mockResolvedValue(undefined),
-}));
-
-jest.mock("@/lib/auth/auth.client", () => ({
-  fetchCurrentUser: jest.fn().mockResolvedValue({ id: 1, username: "test", email: "test@example.com" }),
+  BlogServiceError: class BlogServiceError extends Error {
+    constructor(message: string, readonly status: number) {
+      super(message);
+    }
+  },
 }));
 
 jest.mock("lowlight", () => ({
@@ -92,6 +96,7 @@ describe("BlogEditor", () => {
   let editorOptions: { onUpdate?: (params: { editor: unknown }) => void } | undefined;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     chainApi = {
       focus: jest.fn(() => chainApi),
       toggleBold: jest.fn(() => chainApi),
@@ -125,7 +130,7 @@ describe("BlogEditor", () => {
 
   it("renders the editor toolbar and title input", async () => {
     await act(async () => {
-      render(<BlogEditor mode="create" initialAuthorId={1} />);
+      render(<BlogEditor mode="create" />);
     });
 
     expect(screen.getByPlaceholderText(/kubernetes/i)).toBeInTheDocument();
@@ -136,7 +141,7 @@ describe("BlogEditor", () => {
   it("toggles a bullet list from the toolbar", async () => {
     const user = userEvent.setup();
     await act(async () => {
-      render(<BlogEditor mode="create" initialAuthorId={1} />);
+      render(<BlogEditor mode="create" />);
     });
 
     await user.click(screen.getByTitle("Bullet list"));
@@ -147,7 +152,7 @@ describe("BlogEditor", () => {
   it("enables submit when editor content is present", async () => {
     const user = userEvent.setup();
     await act(async () => {
-      render(<BlogEditor mode="create" initialAuthorId={1} />);
+      render(<BlogEditor mode="create" />);
     });
 
     await user.type(screen.getByPlaceholderText(/kubernetes/i), "A new post");
@@ -159,6 +164,40 @@ describe("BlogEditor", () => {
     });
 
     expect(screen.getByRole("button", { name: /create/i })).not.toBeDisabled();
+  });
+
+  it("sends only the post body and title to create", async () => {
+    const user = userEvent.setup();
+    await act(async () => {
+      render(<BlogEditor mode="create" />);
+    });
+    await user.type(screen.getByPlaceholderText(/kubernetes/i), "A new post");
+    editorInstance.isEmpty = false;
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+    act(() => {
+      editorOptions?.onUpdate?.({ editor: editorInstance });
+    });
+    await user.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(createBlog).toHaveBeenCalledWith({ title: "A new post", markdown: "# Body" });
+    });
+    expect(mockPush).toHaveBeenCalledWith("/blogs");
+  });
+
+  it("shows an access denied message when Blog Service rejects an edit", async () => {
+    const user = userEvent.setup();
+    const updateBlog = jest.requireMock("@/lib/api.client").updateBlog as jest.Mock;
+    updateBlog.mockRejectedValueOnce(new BlogServiceError(
+      "You do not have permission to manage this blog.",
+      403,
+    ));
+    await act(async () => {
+      render(<BlogEditor mode="edit" blogId={42} initialTitle="Post" initialMarkdown="# Body" />);
+    });
+    await user.click(screen.getByRole("button", { name: /update/i }));
+
+    expect(await screen.findByText("You do not have permission to manage this blog.")).toBeInTheDocument();
   });
 
   it("initializes the editor with markdown content type", async () => {
