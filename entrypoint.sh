@@ -6,11 +6,14 @@ export BACKEND_SERVICE_HOST="${BACKEND_SERVICE_HOST:-blog-service}"
 export BACKEND_SERVICE_PORT="${BACKEND_SERVICE_PORT:-8080}"
 export AUTH_SERVICE_HOST="${AUTH_SERVICE_HOST:-auth-service}"
 export AUTH_SERVICE_PORT="${AUTH_SERVICE_PORT:-8081}"
+export USER_SERVICE_HOST="${USER_SERVICE_HOST:-user-service}"
+export USER_SERVICE_PORT="${USER_SERVICE_PORT:-8080}"
 export HOSTNAME="0.0.0.0"
 export PORT="3000"
 
 echo "[*] Backend Service : $BACKEND_SERVICE_HOST:$BACKEND_SERVICE_PORT"
 echo "[*] Auth Service    : $AUTH_SERVICE_HOST:$AUTH_SERVICE_PORT"
+echo "[*] User Service    : $USER_SERVICE_HOST:$USER_SERVICE_PORT"
 
 # ── Identify active Nginx config directory ──────────────────────────
 NGINX_CONF_DIR="/etc/nginx/conf.d"
@@ -23,7 +26,7 @@ mkdir -p "$NGINX_CONF_DIR"
 echo "[*] Generating Nginx config at $NGINX_CONF_DIR/default.conf..."
 
 # ── Generate Nginx config from template via envsubst ────────────────
-envsubst '${BACKEND_SERVICE_HOST} ${BACKEND_SERVICE_PORT} ${AUTH_SERVICE_HOST} ${AUTH_SERVICE_PORT}' \
+envsubst '${BACKEND_SERVICE_HOST} ${BACKEND_SERVICE_PORT} ${AUTH_SERVICE_HOST} ${AUTH_SERVICE_PORT} ${USER_SERVICE_HOST} ${USER_SERVICE_PORT}' \
     < /etc/nginx/conf.d/default.conf.template \
     > "$NGINX_CONF_DIR/default.conf"
 

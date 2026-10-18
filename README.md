@@ -19,6 +19,7 @@ See `docs/metrics.md`. UI manifests: `k8s/`. Central Prometheus/Grafana: `monito
 - Read a single blog with edit/delete actions
 - Create new blog posts
 - Edit existing blog posts
+- View and edit the signed-in user's profile
 - Re-usable PrettyTime component for “x minutes ago” style timestamps
 - Client-side routing with React Router
 - Uses axios for HTTP calls to a backend API
@@ -52,6 +53,25 @@ Example .env variables you may add if implementing an API client wrapper:
 ```bash
 REACT_APP_API_BASE_URL=https://api.example.com
 ```
+
+### User profile service
+
+The signed-in user's profile is read and updated through the User Service's
+`GET` and `PUT /api/v1/users/me` endpoints. The UI sends the existing Auth
+Service access token as a bearer token; it never supplies a user ID for the
+current-user operation.
+
+The same-origin `/api/v1/users/*` route is proxied to the User Service. Set
+`USER_SERVICE_HOST` and `USER_SERVICE_PORT` for the Next.js rewrite in local
+development and for the Nginx proxy in the container (defaults:
+`localhost:8080` for the Next.js rewrite and `user-service:8080` in Nginx).
+`NEXT_PUBLIC_USER_API_URL` can override the browser API base when deployment
+uses another approved origin; cross-origin deployments must configure CORS
+for the UI origin and the Authorization header.
+
+Profile updates replace all mutable fields, including preferences and social
+links. The UI submits all fields together and retains unknown keys in those
+JSON objects.
 
 ## Project structure (important files)
 - `src/App.js` - application root and route definitions. Renders Navbar, configures React Router routes for Home, Blogs, BlogDetail, Create and Edit flows.
@@ -116,7 +136,6 @@ From how the components consume the data, a blog object is expected to include a
  - Tests included:
  - Home.test.js — asserts the heading prop renders.
  - PrettyTime.test.js — tests human-friendly output and interval-based updates (uses Jest timers).
-
 
 
 
