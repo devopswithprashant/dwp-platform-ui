@@ -56,19 +56,19 @@ Example .env variables you may add if implementing an API client wrapper:
 REACT_APP_API_BASE_URL=https://api.example.com
 ```
 
-### User profile service
+### Profile service
 
-The signed-in user's profile is read and updated through the User Service's
-`GET` and `PUT /api/v1/users/me` endpoints. The UI sends the existing Auth
+The signed-in user's profile is read and updated through the Profile Service's
+`GET` and `PUT /api/v1/profiles/me` endpoints. The UI sends the existing Auth
 Service access token as a bearer token; it never supplies a user ID for the
 current-user operation.
 
-The same-origin `/api/v1/users/*` route is proxied to the User Service. Set
-`USER_SERVICE_HOST` and `USER_SERVICE_PORT` for the Next.js rewrite in local
+The same-origin `/api/v1/profiles/*` route is proxied to the Profile Service. Set
+`PROFILE_SERVICE_HOST` and `PROFILE_SERVICE_PORT` for the Next.js rewrite in local
 development and for the Nginx proxy in the container (defaults:
-`localhost:8080` for local Next.js calls and `user-service:8080` in the
+`localhost:8080` for local Next.js calls and `profile-service:8080` in the
 container).
-`NEXT_PUBLIC_USER_API_URL` can override the browser API base when deployment
+`NEXT_PUBLIC_PROFILE_API_URL` can override the browser API base when deployment
 uses another approved origin; cross-origin deployments must configure CORS
 for the UI origin and the Authorization header.
 
@@ -85,9 +85,11 @@ author ID and uses the current profile's `userId` only to decide whether to
 show owner controls. Blog Service remains authoritative for update/delete
 ownership and rejects writes by another user.
 
-The UI resolves public author cards through User Service using each blog's
-`authorUuid`. Configure `BACKEND_SERVICE_HOST` and `BACKEND_SERVICE_PORT` for
-Blog Service and `USER_SERVICE_HOST` and `USER_SERVICE_PORT` for User Service.
+Blog metadata includes an optional public `authorProfile` resolved by Blog
+Service from `authorUuid`. The UI renders that embedded profile only when its
+`userId` matches `authorUuid`; it does not issue per-author Profile Service
+requests. Configure `BACKEND_SERVICE_HOST` and `BACKEND_SERVICE_PORT` for Blog
+Service and `PROFILE_SERVICE_HOST` and `PROFILE_SERVICE_PORT` for Profile Service.
 
 ## Project structure (important files)
 - `src/App.js` - application root and route definitions. Renders Navbar, configures React Router routes for Home, Blogs, BlogDetail, Create and Edit flows.
@@ -152,9 +154,6 @@ From how the components consume the data, a blog object is expected to include a
  - Tests included:
  - Home.test.js — asserts the heading prop renders.
  - PrettyTime.test.js — tests human-friendly output and interval-based updates (uses Jest timers).
-
-
-
 
 
 

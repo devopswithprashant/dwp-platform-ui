@@ -1,4 +1,4 @@
-import type { PublicUserProfile } from "@/lib/user-profiles.server";
+import type { BlogAuthorProfile } from "@/lib/types";
 
 function safeAvatarUrl(value: string | null): string | null {
   if (!value) return null;
@@ -14,11 +14,14 @@ function safeAvatarUrl(value: string | null): string | null {
 
 export default function BlogAuthor({
   profile,
+  authorUuid,
 }: {
-  profile: PublicUserProfile | null;
+  profile: BlogAuthorProfile | null;
+  authorUuid: string | null;
 }) {
-  const name = profile?.displayName?.trim() || "Author unavailable";
-  const avatarUrl = safeAvatarUrl(profile?.avatarUrl ?? null);
+  const verifiedProfile = profile?.userId === authorUuid ? profile : null;
+  const name = verifiedProfile?.displayName?.trim() || "Author unavailable";
+  const avatarUrl = safeAvatarUrl(verifiedProfile?.avatarUrl ?? null);
 
   return (
     <div className="flex items-center gap-3">
@@ -41,8 +44,8 @@ export default function BlogAuthor({
       )}
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{name}</p>
-        {profile?.bio ? (
-          <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{profile.bio}</p>
+        {verifiedProfile?.bio ? (
+          <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{verifiedProfile.bio}</p>
         ) : null}
       </div>
     </div>

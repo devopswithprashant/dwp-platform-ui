@@ -1,20 +1,20 @@
-# UI Service Context — Blog Posts Linked to User Profiles
+# UI Service Context — Blog Posts Linked to Profiles
 
 ## Purpose
 
-Use this handoff to update the UI to show blog authors from User Service
+Use this handoff to update the UI to show blog authors from Profile Service
 profiles and to support authenticated, owner-only blog management. The Blog
-Service stores the authenticated user's UUID on each new post and exposes it
-as `authorUuid` in blog metadata; profile details are fetched separately from
-the User Service.
+Service stores the authenticated user's UUID on each new post, exposes it as
+`authorUuid`, and embeds an optional public `authorProfile` in blog metadata.
 
 ## Services and identity
 
 - **Auth Service** authenticates users and issues access tokens. The token's
   verified `sub` is the user's canonical UUID.
-- **User Service** owns profile information, including public author details.
+- **Profile Service** owns profile information, including public author details.
 - **Blog Service** owns blog content and stores the author's UUID. It does not
-  create profiles or embed profile information in blog responses.
+  create profiles; it resolves and embeds the public author projection in blog
+  metadata.
 
 The UI must not contain the JWT signing secret or try to authorize a write
 based solely on client-side identity checks. Send the Auth Service access token
@@ -37,9 +37,12 @@ relative to it.
 | `POST` | `/api/blogs/{id}/publish` | Owner's bearer access token required | `200` with no response body |
 
 Blog metadata includes the existing `authorId` property and the new stable
-`authorUuid` property. `authorId` is a legacy numeric value; it is not the
-User Service profile ID and must not be used for profile lookup or ownership
-checks. Older/anonymous posts may have no `authorUuid`; treat it as unavailable.
+`authorUuid` property. It also includes `authorProfile`, either `null` when no
+profile is available or a public profile projection with `userId`,
+`displayName`, `bio`, `avatarUrl`, and `createdAt`. `authorId` is a legacy
+numeric value; it is not a Profile Service profile ID and must not be used for
+profile lookup or ownership checks. Older/anonymous posts may have no
+`authorUuid`; treat it as unavailable.
 
 Example metadata:
 
@@ -48,6 +51,13 @@ Example metadata:
   "id": 42,
   "authorId": null,
   "authorUuid": "8c0c0b42-ff2a-4d68-b90f-3b845ca8106a",
+  "authorProfile": {
+    "userId": "8c0c0b42-ff2a-4d68-b90f-3b845ca8106a",
+    "displayName": "Ada",
+    "bio": "Engineer",
+    "avatarUrl": "https://images.example.test/ada.png",
+    "createdAt": "2026-10-18T12:00:00Z"
+  },
   "title": "Building Services",
   "slug": "building-services",
   "status": "PUBLISHED",
@@ -57,10 +67,8 @@ Example metadata:
 ```
 
 `GET /api/blogs` returns Spring's paginated response, with metadata entries in
-its `content` array. `BlogMetadataResponse` currently exposes the fields shown
-above. `BlogContentResponse` returns `postId`, `content`, and `format`
-(`MARKDOWN`). Do not expect `displayName`, `bio`, or `avatarUrl` inside the Blog
-Service response.
+its `content` array. `BlogMetadataResponse` exposes the fields shown above.
+`BlogContentResponse` returns `postId`, `content`, and `format` (`MARKDOWN`).
 
 ### Authenticated write requests
 
@@ -96,36 +104,20 @@ newly-created post or fetch its metadata.
 
 ## Author profile cards
 
-Use the public User Service endpoint to resolve a blog's `authorUuid`:
+Use the optional `authorProfile` embedded in blog metadata to render author
+cards. The Blog Service fetches it from the Profile Service public endpoint
+`GET /api/v1/profiles/{profileId}` without forwarding the reader's bearer token.
+The Blog Service verifies the returned `userId` matches `authorUuid` and
+exposes only `userId`, `displayName`, `bio`, `avatarUrl`, and `createdAt`.
 
-```http
-GET /api/v1/users/{userId}
-```
-
-No reader bearer token is required for this public lookup. The path UUID comes
-from `authorUuid`. An example public profile response is:
-
-```json
-{
-  "userId": "8c0c0b42-ff2a-4d68-b90f-3b845ca8106a",
-  "displayName": "Ada",
-  "bio": "Engineer",
-  "avatarUrl": "https://images.example.test/ada.png",
-  "createdAt": "2026-10-18T12:00:00Z"
-}
-```
-
-Only `userId`, `displayName`, `bio`, `avatarUrl`, and `createdAt` are public
-fields on this endpoint. Check that the returned `userId` matches the
-requested UUID before associating the response with the post. Do not request
-the authenticated `/api/v1/users/me` profile for each author card; that route
-is for the current user's own profile.
-
-For a list page, deduplicate author UUIDs and avoid one unbounded request per
-post. The public API currently has no batch endpoint. Coordinate any caching
-or batching changes with the UI and User Service teams; keep profile lookup
-failure separate from blog content loading so public blog content can still
-render when a profile cannot be retrieved.
+Configure the Profile Service API origin through `PROFILE_SERVICE_BASE_URL`.
+Blog Service lookups have bounded timeouts and use a bounded cache (maximum
+1,000 entries and 10-minute TTL by default). Duplicate author UUIDs in a list
+page share a single lookup. Missing profiles or temporary Profile Service
+failures leave `authorProfile` null and do not block blog metadata. The UI
+should show a neutral/unavailable author state when `authorUuid` or
+`authorProfile` is missing; it should not make a separate Profile Service
+request for each blog post.
 
 | Profile lookup result | UI behavior |
 |---|---|
@@ -135,15 +127,12 @@ render when a profile cannot be retrieved.
 | Network error or `5xx` | Keep the post visible and show a neutral/fallback author state; do not reveal private profile fields. |
 | Missing `authorUuid` on a legacy post | Show an anonymous/author-unavailable state; do not infer ownership from `authorId`, title, or name. |
 
-Configure the User Service API origin (and any gateway prefix) per
-environment. Do not hardcode a developer hostname.
-
 ## UI ownership behavior
 
 Obtain the current user's canonical UUID from the authenticated session or
-User Service `/api/v1/users/me` profile (`userId`). On blog metadata, compare it
-to `authorUuid` to decide whether to display the edit, delete, and publish
-controls:
+Profile Service `/api/v1/profiles/me` profile (`userId`). On blog metadata,
+compare it to `authorUuid` to decide whether to display the edit, delete, and
+publish controls:
 
 ```text
 show owner controls only when currentUser.userId == blog.authorUuid
@@ -174,8 +163,8 @@ alone hides drafts.
 ## Recommended UI flow
 
 1. The visitor can browse public blog metadata and content without signing in.
-2. The UI resolves author cards by looking up each non-null `authorUuid` at
-   the User Service public profile endpoint.
+2. The Blog Service resolves each author UUID through Profile Service and
+   includes public author details in the blog metadata when available.
 3. A signed-in user creates a post with only title and Markdown; the UI sends
    the bearer token and no author identity.
 4. The Blog Service validates the access token and saves its `sub` as
@@ -192,15 +181,15 @@ sequenceDiagram
     participant UI as "UI Service"
     participant Auth as "Auth Service"
     participant Blog as "Blog Service"
-    participant Profile as "User Service"
+    participant Profile as "Profile Service"
 
     User->>UI: Sign in
     UI->>Auth: Authenticate user
     Auth-->>UI: Access token with UUID subject
     UI->>Blog: GET /api/blogs
-    Blog-->>UI: Page of blog metadata with authorUuid
-    UI->>Profile: GET /api/v1/users/{authorUuid}
-    Profile-->>UI: Public profile fields
+    Blog->>Profile: GET /api/v1/profiles/{profileId}
+    Profile-->>Blog: Public profile fields
+    Blog-->>UI: Page of metadata with authorUuid and optional authorProfile
     UI-->>User: Render posts and author cards
     User->>UI: Create post with title and Markdown
     UI->>Blog: POST /api/blogs with bearer token
@@ -220,14 +209,15 @@ sequenceDiagram
 
 - [ ] Add `authorUuid` to blog metadata typings/models and parse it as an optional
       UUID for backwards-compatible legacy posts.
-- [ ] Render author information using the User Service public profile endpoint;
-      handle `404`, lookup failure, and null UUID without blocking post content.
+- [ ] Render `authorProfile` from Blog metadata and show a neutral fallback
+      when profile details or `authorUuid` are unavailable.
 - [ ] Compare the current profile's `userId` with `authorUuid` for presentation
       of owner actions only.
 - [ ] Add the bearer token to create, update, delete, and publish requests.
 - [ ] Remove author identity from create/update request payloads.
 - [ ] Handle `401`, `403`, and `404` distinctly and refresh views after success.
-- [ ] Configure both service API origins for each deployment environment.
+- [ ] Configure Blog and Profile Service API origins for each deployment
+      environment.
 - [ ] Verify the UI's policy for showing drafts, since the current public list
       response is not filtered by `status`.
 
@@ -236,5 +226,5 @@ sequenceDiagram
 - Blog API implementation: [`src/main/java/com/devopswithprashant/service/blog/api/BlogController.java`](./src/main/java/com/devopswithprashant/service/blog/api/BlogController.java)
 - Blog response/request DTOs: [`src/main/java/com/devopswithprashant/service/blog/api/dto/BlogMetadataResponse.java`](./src/main/java/com/devopswithprashant/service/blog/api/dto/BlogMetadataResponse.java), [`src/main/java/com/devopswithprashant/service/blog/api/dto/BlogContentResponse.java`](./src/main/java/com/devopswithprashant/service/blog/api/dto/BlogContentResponse.java), [`src/main/java/com/devopswithprashant/service/blog/api/dto/CreateBlogRequest.java`](./src/main/java/com/devopswithprashant/service/blog/api/dto/CreateBlogRequest.java), and [`src/main/java/com/devopswithprashant/service/blog/api/dto/UpdateBlogRequest.java`](./src/main/java/com/devopswithprashant/service/blog/api/dto/UpdateBlogRequest.java)
 - Blog authentication and access rules: [`src/main/java/com/devopswithprashant/service/blog/SecurityConfig.java`](./src/main/java/com/devopswithprashant/service/blog/SecurityConfig.java)
-- User Service profile/JWT handoff: [`context-for-blog.md`](./context-for-blog.md)
+- Profile Service profile/JWT handoff: [`context-for-blog.md`](./context-for-blog.md)
 - Blog API overview: [`README.md`](./README.md)

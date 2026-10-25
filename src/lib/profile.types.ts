@@ -1,4 +1,4 @@
-export interface UserProfile {
+export interface Profile {
   userId: string;
   displayName: string | null;
   bio: string | null;

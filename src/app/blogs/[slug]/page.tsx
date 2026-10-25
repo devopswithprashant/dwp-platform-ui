@@ -4,7 +4,7 @@ import { getAuthUser } from "@/lib/auth/auth.server";
 import DeleteBlogButton from "@/app/blogs/_components/DeleteBlogButton";
 import BlogMarkdown from "@/app/blogs/_components/BlogMarkdown";
 import BlogAuthor from "@/app/blogs/_components/BlogAuthor";
-import { fetchPublicUserProfile, getCurrentProfileUserId } from "@/lib/user-profiles.server";
+import { getCurrentProfileUserId } from "@/lib/profiles.server";
 
 export default async function BlogPage({
   params,
@@ -21,10 +21,7 @@ export default async function BlogPage({
   const meta = blogs.find((b) => b.slug === slug);
   if (!meta) notFound();
 
-  const [blog, authorProfile] = await Promise.all([
-    fetchBlogContent(meta.id),
-    meta.authorUuid ? fetchPublicUserProfile(meta.authorUuid) : Promise.resolve(null),
-  ]);
+  const blog = await fetchBlogContent(meta.id);
   const isOwner =
     Boolean(user) &&
     Boolean(meta.authorUuid) &&
@@ -38,7 +35,10 @@ export default async function BlogPage({
         {isOwner ? <DeleteBlogButton blogId={meta.id} blogSlug={meta.slug} /> : null}
       </div>
       <div className="mb-8">
-        <BlogAuthor profile={authorProfile} />
+        <BlogAuthor
+          profile={meta.authorProfile ?? null}
+          authorUuid={meta.authorUuid ?? null}
+        />
       </div>
       <BlogMarkdown content={blog.content} />
     </main>

@@ -3,10 +3,7 @@ import { getAuthUser } from "@/lib/auth/auth.server";
 import Link from "next/link";
 import type { BlogMetadata } from "@/lib/types";
 import BlogAuthor from "@/app/blogs/_components/BlogAuthor";
-import {
-  fetchBlogAuthorProfiles,
-  getCurrentProfileUserId,
-} from "@/lib/user-profiles.server";
+import { getCurrentProfileUserId } from "@/lib/profiles.server";
 
 // Disable static generation for this page - fetch data at request time instead
 export const revalidate = 0;
@@ -26,8 +23,6 @@ export default async function BlogsPage() {
     console.error("Failed to fetch blogs:", err);
     error = err instanceof Error ? err.message : "Failed to load blogs";
   }
-  const authorProfiles = await fetchBlogAuthorProfiles(blogs);
-
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -79,7 +74,8 @@ export default async function BlogsPage() {
               </div>
               <div className="mt-4">
                 <BlogAuthor
-                  profile={blog.authorUuid ? authorProfiles.get(blog.authorUuid) ?? null : null}
+                  profile={blog.authorProfile ?? null}
+                  authorUuid={blog.authorUuid ?? null}
                 />
               </div>
               {user && blog.authorUuid && blog.authorUuid === currentProfileUserId ? (

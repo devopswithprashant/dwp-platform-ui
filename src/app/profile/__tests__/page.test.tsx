@@ -2,10 +2,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ProfilePage from "../page";
 import {
-  fetchUserProfile,
-  updateUserProfile,
-  UserProfileApiError,
-} from "@/lib/user-profile.client";
+  fetchProfile,
+  updateProfile,
+  ProfileApiError,
+} from "@/lib/profile.client";
 
 const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace };
@@ -13,10 +13,10 @@ jest.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
 }));
 
-jest.mock("@/lib/user-profile.client", () => ({
-  fetchUserProfile: jest.fn(),
-  updateUserProfile: jest.fn(),
-  UserProfileApiError: class UserProfileApiError extends Error {
+jest.mock("@/lib/profile.client", () => ({
+  fetchProfile: jest.fn(),
+  updateProfile: jest.fn(),
+  ProfileApiError: class ProfileApiError extends Error {
     constructor(
       message: string,
       readonly status: number,
@@ -42,7 +42,7 @@ const profile = {
 describe("ProfilePage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fetchUserProfile as jest.Mock).mockResolvedValue(profile);
+    (fetchProfile as jest.Mock).mockResolvedValue(profile);
   });
 
   it("shows the profile and enters edit mode", async () => {
@@ -60,7 +60,7 @@ describe("ProfilePage", () => {
 
   it("sends all fields and updates the displayed profile after saving", async () => {
     const user = userEvent.setup();
-    (updateUserProfile as jest.Mock).mockResolvedValue({
+    (updateProfile as jest.Mock).mockResolvedValue({
       ...profile,
       displayName: "Ada Lovelace",
     });
@@ -72,7 +72,7 @@ describe("ProfilePage", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
-      expect(updateUserProfile).toHaveBeenCalledWith({
+      expect(updateProfile).toHaveBeenCalledWith({
         displayName: "Ada Lovelace",
         bio: "Engineer",
         avatarUrl: null,
@@ -93,12 +93,12 @@ describe("ProfilePage", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(await screen.findByText("Preferences must be a JSON object.")).toBeInTheDocument();
-    expect(updateUserProfile).not.toHaveBeenCalled();
+    expect(updateProfile).not.toHaveBeenCalled();
   });
 
   it("shows provisioning guidance for a missing profile", async () => {
-    (fetchUserProfile as jest.Mock).mockRejectedValue(
-      new UserProfileApiError("not found", 404),
+    (fetchProfile as jest.Mock).mockRejectedValue(
+      new ProfileApiError("not found", 404),
     );
     render(<ProfilePage />);
 
@@ -108,8 +108,8 @@ describe("ProfilePage", () => {
 
   it("associates service validation details with editable fields", async () => {
     const user = userEvent.setup();
-    (updateUserProfile as jest.Mock).mockRejectedValue(
-      new UserProfileApiError("invalid update", 400, "invalid_update", [
+    (updateProfile as jest.Mock).mockRejectedValue(
+      new ProfileApiError("invalid update", 400, "invalid_update", [
         { field: "displayName", message: "must be at most 100 characters" },
       ]),
     );
@@ -123,8 +123,8 @@ describe("ProfilePage", () => {
   });
 
   it("redirects to sign in when the profile request is unauthorized", async () => {
-    (fetchUserProfile as jest.Mock).mockRejectedValue(
-      new UserProfileApiError("unauthorized", 401),
+    (fetchProfile as jest.Mock).mockRejectedValue(
+      new ProfileApiError("unauthorized", 401),
     );
     render(<ProfilePage />);
 

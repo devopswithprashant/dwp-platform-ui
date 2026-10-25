@@ -1,10 +1,10 @@
 import {
-  fetchUserProfile,
-  updateUserProfile,
-} from "../user-profile.client";
+  fetchProfile,
+  updateProfile,
+} from "../profile.client";
 import { ACCESS_TOKEN_COOKIE } from "../auth/token";
 
-describe("user-profile.client", () => {
+describe("profile.client", () => {
   const mockFetch = jest.fn();
 
   const profile = {
@@ -32,9 +32,9 @@ describe("user-profile.client", () => {
       json: async () => profile,
     });
 
-    await expect(fetchUserProfile()).resolves.toEqual(profile);
+    await expect(fetchProfile()).resolves.toEqual(profile);
     const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("/api/v1/users/me");
+    expect(url).toBe("/api/v1/profiles/me");
     expect(new Headers(init.headers).get("Authorization")).toBe(
       "Bearer header.payload.signature",
     );
@@ -60,10 +60,10 @@ describe("user-profile.client", () => {
       json: async () => ({ ...profile, ...update }),
     });
 
-    await updateUserProfile(update);
+    await updateProfile(update);
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "/api/v1/users/me",
+      "/api/v1/profiles/me",
       expect.objectContaining({
         method: "PUT",
         body: JSON.stringify(update),
@@ -72,7 +72,7 @@ describe("user-profile.client", () => {
   });
 
   it("does not call the service without a token", async () => {
-    await expect(fetchUserProfile()).rejects.toMatchObject({
+    await expect(fetchProfile()).rejects.toMatchObject({
       status: 401,
       code: "unauthorized",
     });
@@ -83,7 +83,7 @@ describe("user-profile.client", () => {
     document.cookie = `${ACCESS_TOKEN_COOKIE}=header.payload.signature; path=/`;
     mockFetch.mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({}) });
 
-    await expect(fetchUserProfile()).rejects.toMatchObject({ status: 401 });
+    await expect(fetchProfile()).rejects.toMatchObject({ status: 401 });
     expect(document.cookie).not.toContain(ACCESS_TOKEN_COOKIE);
   });
 
@@ -100,11 +100,11 @@ describe("user-profile.client", () => {
         }),
       });
 
-    await expect(fetchUserProfile()).rejects.toMatchObject({
+    await expect(fetchProfile()).rejects.toMatchObject({
       status: 404,
       code: "profile_not_found",
     });
-    await expect(updateUserProfile({
+    await expect(updateProfile({
       displayName: "a".repeat(101),
       bio: null,
       avatarUrl: null,

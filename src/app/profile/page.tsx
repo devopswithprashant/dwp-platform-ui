@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { UserProfile } from "@/lib/user-profile.types";
+import type { Profile } from "@/lib/profile.types";
 import {
-  fetchUserProfile,
-  updateUserProfile,
-  UserProfileApiError,
-  type UserProfileUpdate,
-} from "@/lib/user-profile.client";
+  fetchProfile,
+  updateProfile,
+  ProfileApiError,
+  type ProfileUpdate,
+} from "@/lib/profile.client";
 
 type ProfileForm = {
   displayName: string;
@@ -32,7 +32,7 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function toForm(profile: UserProfile): ProfileForm {
+function toForm(profile: Profile): ProfileForm {
   return {
     displayName: profile.displayName ?? "",
     bio: profile.bio ?? "",
@@ -61,7 +61,7 @@ function parseObject(value: string, label: string): Record<string, unknown> {
 }
 
 function validateForm(form: ProfileForm): {
-  update?: UserProfileUpdate;
+  update?: ProfileUpdate;
   errors: FormErrors;
   error?: string;
 } {
@@ -139,7 +139,7 @@ function displayValue(value: unknown): string {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<ProfileForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -153,15 +153,15 @@ export default function ProfilePage() {
     setError(null);
     setNotFound(false);
     try {
-      const result = await fetchUserProfile();
+      const result = await fetchProfile();
       setProfile(result);
       setForm(toForm(result));
     } catch (err) {
-      if (err instanceof UserProfileApiError && err.status === 401) {
+      if (err instanceof ProfileApiError && err.status === 401) {
         router.replace("/login?callbackUrl=%2Fprofile");
         return;
       }
-      if (err instanceof UserProfileApiError && err.status === 404) {
+      if (err instanceof ProfileApiError && err.status === 404) {
         setNotFound(true);
         return;
       }
@@ -197,16 +197,16 @@ export default function ProfilePage() {
 
     startTransition(async () => {
       try {
-        const updated = await updateUserProfile(update);
+        const updated = await updateProfile(update);
         setProfile(updated);
         setForm(toForm(updated));
         setEditing(false);
       } catch (err) {
-        if (err instanceof UserProfileApiError && err.status === 401) {
+        if (err instanceof ProfileApiError && err.status === 401) {
           router.replace("/login?callbackUrl=%2Fprofile");
           return;
         }
-        if (err instanceof UserProfileApiError && err.status === 400) {
+        if (err instanceof ProfileApiError && err.status === 400) {
           const fieldErrors: FormErrors = {};
           for (const detail of err.details) {
             const field = profileFields.find((candidate) => candidate === detail.field);
@@ -220,7 +220,7 @@ export default function ProfilePage() {
           );
           return;
         }
-        if (err instanceof UserProfileApiError && err.status === 404) {
+        if (err instanceof ProfileApiError && err.status === 404) {
           setNotFound(true);
           return;
         }

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import BlogEditor from "@/app/blogs/_components/BlogEditor";
 import { fetchBlogContent, fetchBlogs } from "@/lib/api.server";
 import { getAuthUser } from "@/lib/auth/auth.server";
-import { getCurrentProfileUserId } from "@/lib/user-profiles.server";
+import { getCurrentProfileUserId } from "@/lib/profiles.server";
 
 export default async function EditBlogPage({
   params,
