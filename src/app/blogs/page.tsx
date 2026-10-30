@@ -2,6 +2,8 @@ import { fetchBlogs } from "@/lib/api.server";
 import { getAuthUser } from "@/lib/auth/auth.server";
 import Link from "next/link";
 import type { BlogMetadata } from "@/lib/types";
+import BlogAuthor from "@/app/blogs/_components/BlogAuthor";
+import { getCurrentProfileUserId } from "@/lib/profiles.server";
 
 // Disable static generation for this page - fetch data at request time instead
 export const revalidate = 0;
@@ -10,7 +12,10 @@ export const dynamic = 'force-dynamic';
 export default async function BlogsPage() {
   let blogs: BlogMetadata[] = [];
   let error: string | null = null;
-  const user = await getAuthUser();
+  const [user, currentProfileUserId] = await Promise.all([
+    getAuthUser(),
+    getCurrentProfileUserId(),
+  ]);
 
   try {
     blogs = await fetchBlogs();
@@ -18,7 +23,6 @@ export default async function BlogsPage() {
     console.error("Failed to fetch blogs:", err);
     error = err instanceof Error ? err.message : "Failed to load blogs";
   }
-
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -68,6 +72,17 @@ export default async function BlogsPage() {
               <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {blog.status === "PUBLISHED" ? "Published" : "Draft"}
               </div>
+              <div className="mt-4">
+                <BlogAuthor
+                  profile={blog.authorProfile ?? null}
+                  authorUuid={blog.authorUuid ?? null}
+                />
+              </div>
+              {user && blog.authorUuid && blog.authorUuid === currentProfileUserId ? (
+                <p className="mt-3 text-xs font-medium text-blue-700 dark:text-blue-300">
+                  Your post
+                </p>
+              ) : null}
             </li>
           ))
         ) : (

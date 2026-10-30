@@ -139,7 +139,6 @@ describe('Blog API Functions', () => {
     it('should create a blog successfully', async () => {
       const request: CreateBlogRequest = {
         title: 'New Blog',
-        authorId: 1,
         markdown: '# New Blog\n\nContent here',
       }
 
@@ -172,7 +171,6 @@ describe('Blog API Functions', () => {
     it('should throw error with custom message on create fail', async () => {
       const request: CreateBlogRequest = {
         title: 'New Blog',
-        authorId: 1,
         markdown: '# Content',
       }
 
@@ -187,7 +185,6 @@ describe('Blog API Functions', () => {
     it('should throw fallback error on create fail with no message', async () => {
       const request: CreateBlogRequest = {
         title: 'New Blog',
-        authorId: 1,
         markdown: '# Content',
       }
 

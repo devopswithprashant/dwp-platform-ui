@@ -34,6 +34,7 @@ describe('AuthNav', () => {
     )
 
     expect(screen.getByText('mohit')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Profile' })).toHaveAttribute('href', '/profile')
     expect(screen.getByRole('button', { name: 'Logout' })).toBeInTheDocument()
   })
 

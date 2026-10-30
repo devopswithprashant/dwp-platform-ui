@@ -15,12 +15,21 @@ describe('Blog Types', () => {
       status: 'published',
       createdAt: '2026-04-11T00:00:00Z',
       publishedAt: '2026-04-11T00:00:00Z',
+      authorUuid: '8c0c0b42-ff2a-4d68-b90f-3b845ca8106a',
+      authorProfile: {
+        userId: '8c0c0b42-ff2a-4d68-b90f-3b845ca8106a',
+        displayName: 'Ada',
+        bio: 'Engineer',
+        avatarUrl: null,
+        createdAt: '2026-04-11T00:00:00Z',
+      },
     }
 
     expect(blog.id).toBe(1)
     expect(blog.title).toBe('Test Blog')
     expect(blog.slug).toBe('test-blog')
     expect(blog.status).toBe('published')
+    expect(blog.authorProfile?.userId).toBe(blog.authorUuid)
   })
 
   it('should create a BlogMetadata without publishedAt', () => {
@@ -50,12 +59,11 @@ describe('Blog Types', () => {
   it('should create a valid CreateBlogRequest', () => {
     const request: CreateBlogRequest = {
       title: 'New Blog',
-      authorIdentity: '101',
       markdown: '# New Blog\n\nContent here',
     }
 
     expect(request.title).toBe('New Blog')
-    expect(request.authorIdentity).toBe('101')
+    expect('authorIdentity' in request).toBe(false)
     expect(request.markdown).toContain('# New Blog')
   })
 

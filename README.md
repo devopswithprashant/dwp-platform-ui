@@ -19,6 +19,9 @@ See `docs/metrics.md`. UI manifests: `k8s/`. Central Prometheus/Grafana: `monito
 - Read a single blog with edit/delete actions
 - Create new blog posts
 - Edit existing blog posts
+- Link new posts to the signed-in user's profile
+- Show author profiles and restrict post management to the owner
+- View and edit the signed-in user's profile
 - Re-usable PrettyTime component for “x minutes ago” style timestamps
 - Client-side routing with React Router
 - Uses axios for HTTP calls to a backend API
@@ -52,6 +55,41 @@ Example .env variables you may add if implementing an API client wrapper:
 ```bash
 REACT_APP_API_BASE_URL=https://api.example.com
 ```
+
+### Profile service
+
+The signed-in user's profile is read and updated through the Profile Service's
+`GET` and `PUT /api/v1/profiles/me` endpoints. The UI sends the existing Auth
+Service access token as a bearer token; it never supplies a user ID for the
+current-user operation.
+
+The same-origin `/api/v1/profiles/*` route is proxied to the Profile Service. Set
+`PROFILE_SERVICE_HOST` and `PROFILE_SERVICE_PORT` for the Next.js rewrite in local
+development and for the Nginx proxy in the container (defaults:
+`localhost:8080` for local Next.js calls and `profile-service:8080` in the
+container).
+`NEXT_PUBLIC_PROFILE_API_URL` can override the browser API base when deployment
+uses another approved origin; cross-origin deployments must configure CORS
+for the UI origin and the Authorization header.
+
+Profile updates replace all mutable fields, including preferences and social
+links. The UI submits all fields together and retains unknown keys in those
+JSON objects.
+
+### Blog ownership
+
+New posts are created with only a title and Markdown body. The UI sends the
+signed-in user's Auth Service access token to Blog Service; Blog Service uses
+the verified token subject as the post's `authorUuid`. The UI does not send an
+author ID and uses the current profile's `userId` only to decide whether to
+show owner controls. Blog Service remains authoritative for update/delete
+ownership and rejects writes by another user.
+
+Blog metadata includes an optional public `authorProfile` resolved by Blog
+Service from `authorUuid`. The UI renders that embedded profile only when its
+`userId` matches `authorUuid`; it does not issue per-author Profile Service
+requests. Configure `BACKEND_SERVICE_HOST` and `BACKEND_SERVICE_PORT` for Blog
+Service and `PROFILE_SERVICE_HOST` and `PROFILE_SERVICE_PORT` for Profile Service.
 
 ## Project structure (important files)
 - `src/App.js` - application root and route definitions. Renders Navbar, configures React Router routes for Home, Blogs, BlogDetail, Create and Edit flows.
@@ -116,12 +154,6 @@ From how the components consume the data, a blog object is expected to include a
  - Tests included:
  - Home.test.js — asserts the heading prop renders.
  - PrettyTime.test.js — tests human-friendly output and interval-based updates (uses Jest timers).
-
-
-
-
-
-
 
 
 

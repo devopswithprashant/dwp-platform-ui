@@ -42,6 +42,12 @@ export default function AuthNav({ initialUser }: { initialUser: AuthUser | null 
         <span className="hidden text-sm text-gray-600 sm:inline dark:text-gray-300">
           {user.username}
         </span>
+        <Link
+          href="/profile"
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-900"
+        >
+          Profile
+        </Link>
         <button
           type="button"
           onClick={onLogout}

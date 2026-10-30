@@ -1,3 +1,11 @@
+export interface BlogAuthorProfile {
+  userId: string;
+  displayName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
 export interface BlogMetadata {
   id: number;
   title: string;
@@ -5,6 +13,9 @@ export interface BlogMetadata {
   status: string;
   createdAt: string;
   publishedAt?: string;
+  authorId?: number | null;
+  authorUuid?: string | null;
+  authorProfile?: BlogAuthorProfile | null;
 }
 
 export interface BlogContent {
@@ -15,7 +26,6 @@ export interface BlogContent {
 
 export interface CreateBlogRequest {
   title: string;
-  authorIdentity?: string;
   markdown: string;
 }
 

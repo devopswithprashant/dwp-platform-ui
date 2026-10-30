@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { CreateBlogRequest, UpdateBlogRequest } from "@/lib/types";
-import { createBlog, updateBlog } from "@/lib/api.client";
-import { fetchCurrentUser } from "@/lib/auth/auth.client";
+import { BlogServiceError, createBlog, updateBlog } from "@/lib/api.client";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 
 type Mode = "create" | "edit";
@@ -13,7 +12,6 @@ export default function BlogEditor(props: {
   mode: Mode;
   blogId?: number;
   initialTitle?: string;
-  initialAuthorId?: number;
   initialMarkdown?: string;
   submitLabel?: string;
 }) {
@@ -22,33 +20,10 @@ export default function BlogEditor(props: {
   const editorRef = useRef<RichTextEditorHandle>(null);
 
   const [title, setTitle] = useState(props.initialTitle ?? "");
-  const [authorIdentity, setAuthorIdentity] = useState<string | null>(
-    props.initialAuthorId !== undefined ? String(props.initialAuthorId) : null,
-  );
   const [hasContent, setHasContent] = useState(() =>
     Boolean(props.initialMarkdown?.trim()),
   );
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (props.mode !== "create" || authorIdentity !== null) return;
-
-    void fetchCurrentUser().then((user) => {
-      if (user) {
-        const resolvedAuthorIdentity = typeof user.id === "number"
-          ? String(user.id)
-          : typeof user.id === "string"
-            ? user.id
-            : null;
-
-        if (resolvedAuthorIdentity) {
-          setAuthorIdentity(resolvedAuthorIdentity);
-        }
-      } else {
-        router.push("/login?callbackUrl=/blogs/new");
-      }
-    });
-  }, [props.mode, authorIdentity, router]);
 
   const handleContentChange = useCallback((isEmpty: boolean) => {
     setHasContent((current) => {
@@ -75,7 +50,6 @@ export default function BlogEditor(props: {
           const payload: CreateBlogRequest = {
             title: title.trim(),
             markdown,
-            ...(authorIdentity ? { authorIdentity } : {}),
           };
           await createBlog(payload);
         } else {
@@ -86,8 +60,21 @@ export default function BlogEditor(props: {
           await updateBlog(props.blogId!, payload);
         }
 
-        router.push("/");
+        router.push("/blogs");
+        router.refresh();
       } catch (err) {
+        if (err instanceof BlogServiceError && err.status === 401) {
+          const callbackUrl = props.mode === "create"
+            ? "/blogs/new"
+            : `/blogs/${props.blogId}/edit`;
+          router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+          return;
+        }
+        if (err instanceof BlogServiceError && err.status === 404) {
+          router.push("/blogs");
+          router.refresh();
+          return;
+        }
         const message = err instanceof Error ? err.message : "Request failed";
         setError(message);
       }

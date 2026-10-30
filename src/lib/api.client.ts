@@ -11,6 +11,16 @@ const logger = createClientLogger();
 
 const getApiBaseUrl = () => process.env.NEXT_PUBLIC_BLOG_API_URL || "/api";
 
+export class BlogServiceError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "BlogServiceError";
+  }
+}
+
 type FetchMeta = {
   "event.action": string;
   "url.full": string;
@@ -25,12 +35,24 @@ async function loggedFetch(
   input: string,
   init?: RequestInit
 ): Promise<Response> {
-  if (process.env.NODE_ENV === "test") {
-    // Keep calls stable for unit tests (no header mutation / wrapping).
-    return init ? fetch(input, init) : fetch(input);
+  const method = (init?.method || "GET").toUpperCase();
+  const headers = new Headers(init?.headers);
+  if (method !== "GET" && method !== "HEAD") {
+    const token = getClientAccessToken();
+    if (!token) {
+      throw new BlogServiceError("Your session has expired. Please sign in again.", 401);
+    }
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const method = (init?.method || "GET").toUpperCase();
+  if (process.env.NODE_ENV === "test") {
+    if (!init) return fetch(input);
+    return fetch(
+      input,
+      method !== "GET" && method !== "HEAD" ? { ...init, headers } : init,
+    );
+  }
+
   const url = input;
   const requestId =
     (globalThis.crypto?.randomUUID?.() as string | undefined) ||
@@ -38,13 +60,7 @@ async function loggedFetch(
 
   const started = Date.now();
 
-  const headers = new Headers(init?.headers);
   headers.set("x-request-id", requestId);
-
-  const token = getClientAccessToken();
-  if (token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
 
   const meta: FetchMeta = {
     "event.action": operation,
@@ -111,7 +127,7 @@ export async function fetchBlogContent(blogId: number): Promise<BlogContent> {
 
 export async function createBlog(
   payload: CreateBlogRequest
-): Promise<BlogMetadata> {
+): Promise<number> {
   const url = `${getApiBaseUrl()}/blogs`;
   const res = await loggedFetch("createBlog", url, {
     method: "POST",
@@ -120,11 +136,19 @@ export async function createBlog(
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Failed to create blog");
+    throw await readBlogServiceError(res, "Failed to create blog");
   }
 
-  return res.json();
+  const data: unknown = await res.json();
+  const id = typeof data === "number"
+    ? data
+    : data !== null && typeof data === "object" && "id" in data && typeof data.id === "number"
+      ? data.id
+      : null;
+  if (id === null || !Number.isFinite(id)) {
+    throw new Error("Blog service returned an invalid post ID");
+  }
+  return id;
 }
 
 export async function updateBlog(
@@ -139,8 +163,7 @@ export async function updateBlog(
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Failed to update blog");
+    throw await readBlogServiceError(res, "Failed to update blog");
   }
 }
 
@@ -151,8 +174,22 @@ export async function deleteBlog(blogId: number): Promise<void> {
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Failed to delete blog");
+    throw await readBlogServiceError(res, "Failed to delete blog");
   }
 }
 
+async function readBlogServiceError(
+  res: Response,
+  fallback: string,
+): Promise<BlogServiceError> {
+  const text = await res.text().catch(() => "");
+  const message =
+    res.status === 401
+      ? "Your session has expired. Please sign in again."
+      : res.status === 403
+        ? "You do not have permission to manage this blog."
+        : res.status === 404
+          ? "This blog could not be found."
+          : text || fallback;
+  return new BlogServiceError(message, res.status);
+}
