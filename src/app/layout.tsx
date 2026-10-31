@@ -56,7 +56,10 @@ export default async function RootLayout({
               </Link>
             </div>
             <div className="flex items-center justify-end gap-3">
-              <AuthNav initialUser={user} />
+              <AuthNav
+                key={`${user?.id ?? "anonymous"}:${user?.username ?? ""}`}
+                initialUser={user}
+              />
               <ThemeToggle />
             </div>
           </nav>

@@ -152,16 +152,16 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const loadProfile = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setBlogsError(null);
-    setNotFound(false);
-    try {
-      const [profileResult, blogsResult] = await Promise.allSettled([
-        fetchProfile(),
-        fetchBlogs(),
-      ]);
+  const fetchProfileData = useCallback(
+    () => Promise.allSettled([fetchProfile(), fetchBlogs()]),
+    [],
+  );
+
+  const applyProfileData = useCallback(
+    ([profileResult, blogsResult]: Awaited<ReturnType<typeof fetchProfileData>>) => {
+      setError(null);
+      setBlogsError(null);
+      setNotFound(false);
       if (blogsResult.status === "fulfilled") {
         setBlogs(blogsResult.value);
       } else {
@@ -177,7 +177,12 @@ export default function ProfilePage() {
       const result = profileResult.value;
       setProfile(result);
       setForm(toForm(result));
-    } catch (err) {
+    },
+    [],
+  );
+
+  const handleProfileLoadError = useCallback(
+    (err: unknown) => {
       if (err instanceof ProfileApiError && err.status === 401) {
         router.replace("/login?callbackUrl=%2Fprofile");
         return;
@@ -187,10 +192,9 @@ export default function ProfilePage() {
         return;
       }
       setError(err instanceof Error ? err.message : "Unable to load your profile.");
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   const ownBlogs = profile
     ? blogs.filter((blog) => blog.authorUuid === profile.userId)
@@ -203,14 +207,39 @@ export default function ProfilePage() {
   );
 
   useEffect(() => {
-    void loadProfile();
-  }, [loadProfile]);
+    let active = true;
+    fetchProfileData()
+      .then((result) => {
+        if (active) applyProfileData(result);
+      })
+      .catch((err: unknown) => {
+        if (active) handleProfileLoadError(err);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [applyProfileData, fetchProfileData, handleProfileLoadError]);
 
   function cancelEditing() {
     if (profile) setForm(toForm(profile));
     setErrors({});
     setError(null);
     setEditing(false);
+  }
+
+  function retryLoadProfile() {
+    setLoading(true);
+    setError(null);
+    setBlogsError(null);
+    setNotFound(false);
+    fetchProfileData()
+      .then(applyProfileData)
+      .catch(handleProfileLoadError)
+      .finally(() => setLoading(false));
   }
 
   function saveProfile(event: React.FormEvent<HTMLFormElement>) {
@@ -297,7 +326,7 @@ export default function ProfilePage() {
           </p>
           <button
             type="button"
-            onClick={() => void loadProfile()}
+            onClick={retryLoadProfile}
             className="mt-4 text-sm font-semibold underline underline-offset-4"
           >
             Try again
@@ -309,7 +338,7 @@ export default function ProfilePage() {
         <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
           {error}
           {!editing ? (
-            <button type="button" onClick={() => void loadProfile()} className="ml-2 font-semibold underline">
+            <button type="button" onClick={retryLoadProfile} className="ml-2 font-semibold underline">
               Try again
             </button>
           ) : null}

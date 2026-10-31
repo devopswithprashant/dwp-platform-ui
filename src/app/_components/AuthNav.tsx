@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AuthUser } from "@/lib/auth/types";
 import { fetchCurrentUser, logoutUser } from "@/lib/auth/auth.client";
 
@@ -11,23 +11,23 @@ export default function AuthNav({ initialUser }: { initialUser: AuthUser | null 
   const [user, setUser] = useState<AuthUser | null>(initialUser);
 
   useEffect(() => {
-    setUser(initialUser);
+    if (initialUser) return;
+
+    let active = true;
+    async function loadUser() {
+      try {
+        const current = await fetchCurrentUser();
+        if (active) setUser(current);
+      } catch {
+        if (active) setUser(null);
+      }
+    }
+
+    void loadUser();
+    return () => {
+      active = false;
+    };
   }, [initialUser]);
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const current = await fetchCurrentUser();
-      setUser(current);
-    } catch {
-      setUser(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!initialUser) {
-      void refreshUser();
-    }
-  }, [initialUser, refreshUser]);
 
   function onLogout() {
     logoutUser();
