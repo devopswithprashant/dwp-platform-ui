@@ -162,7 +162,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
@@ -211,7 +211,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
@@ -259,7 +259,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
@@ -306,7 +306,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
