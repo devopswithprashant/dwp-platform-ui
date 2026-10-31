@@ -110,6 +110,17 @@ describe("ProfilePage", () => {
       .toBeTruthy();
   });
 
+  it("keeps the profile available and reports a blog-list failure", async () => {
+    (fetchBlogs as jest.Mock).mockRejectedValue(new Error("Blog service unavailable"));
+    render(<ProfilePage />);
+
+    expect(await screen.findByRole("heading", { name: "Ada" })).toBeInTheDocument();
+    expect(await screen.findByText(
+      "Unable to load your blogs: Blog service unavailable",
+    )).toBeInTheDocument();
+    expect(fetchProfile).toHaveBeenCalled();
+  });
+
   it("sends all fields and updates the displayed profile after saving", async () => {
     const user = userEvent.setup();
     (updateProfile as jest.Mock).mockResolvedValue({

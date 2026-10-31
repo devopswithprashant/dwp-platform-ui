@@ -188,6 +188,15 @@ describe("BlogEditor", () => {
     expect(jest.requireMock("@/lib/api.client").publishBlog).not.toHaveBeenCalled();
   });
 
+  it("keeps the save actions disabled until title and content are both present", async () => {
+    await act(async () => {
+      render(<BlogEditor mode="create" />);
+    });
+
+    expect(screen.getByRole("button", { name: "Save as draft" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Publish" })).toBeDisabled();
+  });
+
   it("creates and publishes a new blog when Publish is selected", async () => {
     const user = userEvent.setup();
     await act(async () => {
@@ -221,6 +230,59 @@ describe("BlogEditor", () => {
     await waitFor(() => {
       expect(updateBlog).toHaveBeenCalledWith(42, { title: "Post", markdown: "# Body" });
       expect(jest.requireMock("@/lib/api.client").publishBlog).toHaveBeenCalledWith(42);
+    });
+    expect(updateBlog.mock.invocationCallOrder[0]).toBeLessThan(
+      (jest.requireMock("@/lib/api.client").publishBlog as jest.Mock).mock.invocationCallOrder[0],
+    );
+  });
+
+  it("updates a draft without publishing when Save as draft is selected", async () => {
+    const user = userEvent.setup();
+    const updateBlog = jest.requireMock("@/lib/api.client").updateBlog as jest.Mock;
+    await act(async () => {
+      render(<BlogEditor mode="edit" blogId={42} status="DRAFT" initialTitle="Post" initialMarkdown="# Body" />);
+    });
+    editorInstance.getMarkdown.mockReturnValue("# Revised body");
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
+
+    await waitFor(() => {
+      expect(updateBlog).toHaveBeenCalledWith(42, {
+        title: "Post",
+        markdown: "# Revised body",
+      });
+    });
+    expect(jest.requireMock("@/lib/api.client").publishBlog).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith("/profile");
+  });
+
+  it("reports publish failure after a successful create and allows retry", async () => {
+    const user = userEvent.setup();
+    const publishBlog = jest.requireMock("@/lib/api.client").publishBlog as jest.Mock;
+    publishBlog.mockRejectedValueOnce(new Error("Publishing unavailable"));
+    await act(async () => {
+      render(<BlogEditor mode="create" />);
+    });
+    await user.type(screen.getByPlaceholderText(/kubernetes/i), "A new post");
+    editorInstance.isEmpty = false;
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+    act(() => {
+      editorOptions?.onUpdate?.({ editor: editorInstance });
+    });
+
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+    expect(await screen.findByText(
+      "The draft was saved, but publishing failed: Publishing unavailable",
+    )).toBeInTheDocument();
+    expect(createBlog).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+    await waitFor(() => {
+      expect(publishBlog).toHaveBeenCalledTimes(2);
+      expect(jest.requireMock("@/lib/api.client").updateBlog).toHaveBeenCalledWith(
+        42,
+        { title: "A new post", markdown: "# Body" },
+      );
     });
   });
 
