@@ -15,6 +15,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/lib/api.client", () => ({
   createBlog: jest.fn().mockResolvedValue(undefined),
   updateBlog: jest.fn().mockResolvedValue(undefined),
+  publishBlog: jest.fn().mockResolvedValue(undefined),
   BlogServiceError: class BlogServiceError extends Error {
     constructor(message: string, readonly status: number) {
       super(message);
@@ -120,6 +121,7 @@ describe("BlogEditor", () => {
       isDestroyed: false,
       isActive: jest.fn(() => false),
     };
+    (createBlog as jest.Mock).mockResolvedValue(42);
 
     editorOptions = undefined;
     mockUseEditor.mockImplementation((options: { onUpdate?: (params: { editor: unknown }) => void }) => {
@@ -163,10 +165,10 @@ describe("BlogEditor", () => {
       editorOptions?.onUpdate?.({ editor: editorInstance });
     });
 
-    expect(screen.getByRole("button", { name: /create/i })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /save as draft/i })).not.toBeDisabled();
   });
 
-  it("sends only the post body and title to create", async () => {
+  it("saves a new blog as a draft", async () => {
     const user = userEvent.setup();
     await act(async () => {
       render(<BlogEditor mode="create" />);
@@ -177,12 +179,68 @@ describe("BlogEditor", () => {
     act(() => {
       editorOptions?.onUpdate?.({ editor: editorInstance });
     });
-    await user.click(screen.getByRole("button", { name: /create/i }));
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await waitFor(() => {
       expect(createBlog).toHaveBeenCalledWith({ title: "A new post", markdown: "# Body" });
     });
+    expect(mockPush).toHaveBeenCalledWith("/profile");
+    expect(jest.requireMock("@/lib/api.client").publishBlog).not.toHaveBeenCalled();
+  });
+
+  it("creates and publishes a new blog when Publish is selected", async () => {
+    const user = userEvent.setup();
+    await act(async () => {
+      render(<BlogEditor mode="create" />);
+    });
+    await user.type(screen.getByPlaceholderText(/kubernetes/i), "A new post");
+    editorInstance.isEmpty = false;
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+    act(() => {
+      editorOptions?.onUpdate?.({ editor: editorInstance });
+    });
+
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+
+    await waitFor(() => {
+      expect(createBlog).toHaveBeenCalledWith({ title: "A new post", markdown: "# Body" });
+      expect(jest.requireMock("@/lib/api.client").publishBlog).toHaveBeenCalledWith(42);
+    });
     expect(mockPush).toHaveBeenCalledWith("/blogs");
+  });
+
+  it("updates and publishes a draft when Publish is selected", async () => {
+    const user = userEvent.setup();
+    const updateBlog = jest.requireMock("@/lib/api.client").updateBlog as jest.Mock;
+    await act(async () => {
+      render(<BlogEditor mode="edit" blogId={42} status="DRAFT" initialTitle="Post" initialMarkdown="# Body" />);
+    });
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+
+    await waitFor(() => {
+      expect(updateBlog).toHaveBeenCalledWith(42, { title: "Post", markdown: "# Body" });
+      expect(jest.requireMock("@/lib/api.client").publishBlog).toHaveBeenCalledWith(42);
+    });
+  });
+
+  it("does not offer draft or publish actions when editing an already-published post", async () => {
+    const user = userEvent.setup();
+    const updateBlog = jest.requireMock("@/lib/api.client").updateBlog as jest.Mock;
+    await act(async () => {
+      render(<BlogEditor mode="edit" blogId={42} status="PUBLISHED" initialTitle="Post" initialMarkdown="# Body" />);
+    });
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+
+    expect(screen.getByRole("button", { name: "Save published changes" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save as draft" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save published changes" }));
+
+    await waitFor(() => {
+      expect(updateBlog).toHaveBeenCalledWith(42, { title: "Post", markdown: "# Body" });
+    });
+    expect(jest.requireMock("@/lib/api.client").publishBlog).not.toHaveBeenCalled();
   });
 
   it("shows an access denied message when Blog Service rejects an edit", async () => {
@@ -195,7 +253,8 @@ describe("BlogEditor", () => {
     await act(async () => {
       render(<BlogEditor mode="edit" blogId={42} initialTitle="Post" initialMarkdown="# Body" />);
     });
-    await user.click(screen.getByRole("button", { name: /update/i }));
+    editorInstance.getMarkdown.mockReturnValue("# Body");
+    await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     expect(await screen.findByText("You do not have permission to manage this blog.")).toBeInTheDocument();
   });

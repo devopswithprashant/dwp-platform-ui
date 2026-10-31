@@ -6,6 +6,7 @@ import {
   updateProfile,
   ProfileApiError,
 } from "@/lib/profile.client";
+import { fetchBlogs } from "@/lib/api.client";
 
 const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace };
@@ -28,6 +29,10 @@ jest.mock("@/lib/profile.client", () => ({
   },
 }));
 
+jest.mock("@/lib/api.client", () => ({
+  fetchBlogs: jest.fn(),
+}));
+
 const profile = {
   userId: "8c0c0b42-ff2a-4d68-b90f-3b845ca8106a",
   displayName: "Ada",
@@ -43,6 +48,7 @@ describe("ProfilePage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (fetchProfile as jest.Mock).mockResolvedValue(profile);
+    (fetchBlogs as jest.Mock).mockResolvedValue([]);
   });
 
   it("shows the profile and enters edit mode", async () => {
@@ -56,6 +62,52 @@ describe("ProfilePage", () => {
     expect(screen.getByLabelText("Preferences (JSON object)")).toHaveValue(
       JSON.stringify(profile.preferences, null, 2),
     );
+  });
+
+  it("shows the user's drafts before their published posts and excludes other authors", async () => {
+    (fetchBlogs as jest.Mock).mockResolvedValue([
+      {
+        id: 1,
+        title: "My draft",
+        slug: "my-draft",
+        status: "DRAFT",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: profile.userId,
+      },
+      {
+        id: 2,
+        title: "My published post",
+        slug: "my-published-post",
+        status: "PUBLISHED",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: profile.userId,
+      },
+      {
+        id: 3,
+        title: "Someone else's draft",
+        slug: "someone-elses-draft",
+        status: "DRAFT",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: "other-user",
+      },
+    ]);
+
+    render(<ProfilePage />);
+
+    const draftsHeading = await screen.findByRole("heading", { name: "Drafts" });
+    const publishedHeading = screen.getByRole("heading", { name: "Published posts" });
+    expect(screen.getByRole("link", { name: "My draft" })).toHaveAttribute(
+      "href",
+      "/blogs/my-draft",
+    );
+    expect(screen.getByRole("link", { name: "Edit draft" })).toHaveAttribute(
+      "href",
+      "/blogs/my-draft/edit",
+    );
+    expect(screen.getByRole("link", { name: "My published post" })).toBeInTheDocument();
+    expect(screen.queryByText("Someone else's draft")).not.toBeInTheDocument();
+    expect(draftsHeading.compareDocumentPosition(publishedHeading) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
   });
 
   it("sends all fields and updates the displayed profile after saving", async () => {

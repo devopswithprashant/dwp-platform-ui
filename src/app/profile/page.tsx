@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Profile } from "@/lib/profile.types";
+import type { BlogMetadata } from "@/lib/types";
+import { fetchBlogs } from "@/lib/api.client";
 import {
   fetchProfile,
   updateProfile,
@@ -141,6 +143,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState<ProfileForm | null>(null);
+  const [blogs, setBlogs] = useState<BlogMetadata[]>([]);
+  const [blogsError, setBlogsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -151,9 +155,26 @@ export default function ProfilePage() {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setBlogsError(null);
     setNotFound(false);
     try {
-      const result = await fetchProfile();
+      const [profileResult, blogsResult] = await Promise.allSettled([
+        fetchProfile(),
+        fetchBlogs(),
+      ]);
+      if (blogsResult.status === "fulfilled") {
+        setBlogs(blogsResult.value);
+      } else {
+        setBlogs([]);
+        setBlogsError(
+          blogsResult.reason instanceof Error
+            ? blogsResult.reason.message
+            : "Unable to load your blogs.",
+        );
+      }
+      if (profileResult.status === "rejected") throw profileResult.reason;
+
+      const result = profileResult.value;
       setProfile(result);
       setForm(toForm(result));
     } catch (err) {
@@ -170,6 +191,16 @@ export default function ProfilePage() {
       setLoading(false);
     }
   }, [router]);
+
+  const ownBlogs = profile
+    ? blogs.filter((blog) => blog.authorUuid === profile.userId)
+    : [];
+  const draftBlogs = ownBlogs.filter(
+    (blog) => blog.status?.toUpperCase() === "DRAFT",
+  );
+  const publishedBlogs = ownBlogs.filter(
+    (blog) => blog.status?.toUpperCase() === "PUBLISHED",
+  );
 
   useEffect(() => {
     void loadProfile();
@@ -367,10 +398,84 @@ export default function ProfilePage() {
         </form>
       ) : null}
 
+      {profile && !loading && !notFound ? (
+        <section className="mt-10 space-y-8">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Your blogs</h2>
+            <p className={`mt-1 ${mutedClass}`}>
+              Drafts are visible only in your profile; published posts are public.
+            </p>
+          </div>
+
+          {blogsError ? (
+            <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+              Unable to load your blogs: {blogsError}
+            </p>
+          ) : (
+            <>
+              <section aria-labelledby="draft-blogs-heading">
+                <h3 id="draft-blogs-heading" className="text-lg font-semibold">
+                  Drafts
+                </h3>
+                {draftBlogs.length ? (
+                  <BlogList blogs={draftBlogs} isDraft />
+                ) : (
+                  <p className={`mt-2 ${mutedClass}`}>You have no drafts.</p>
+                )}
+              </section>
+
+              <section aria-labelledby="published-blogs-heading">
+                <h3 id="published-blogs-heading" className="text-lg font-semibold">
+                  Published posts
+                </h3>
+                {publishedBlogs.length ? (
+                  <BlogList blogs={publishedBlogs} />
+                ) : (
+                  <p className={`mt-2 ${mutedClass}`}>You have no published posts.</p>
+                )}
+              </section>
+            </>
+          )}
+        </section>
+      ) : null}
+
       <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
         <Link href="/" className="font-medium hover:underline">Back to home</Link>
       </p>
     </section>
+  );
+}
+
+function BlogList({ blogs, isDraft = false }: { blogs: BlogMetadata[]; isDraft?: boolean }) {
+  return (
+    <ul className="mt-3 space-y-3">
+      {blogs.map((blog) => (
+        <li
+          key={blog.id}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white/80 p-4 dark:border-gray-800 dark:bg-gray-900/70"
+        >
+          <div>
+            <Link
+              href={`/blogs/${blog.slug}`}
+              className="font-semibold text-blue-700 hover:underline dark:text-blue-300"
+            >
+              {blog.title}
+            </Link>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {isDraft ? "Draft" : "Published"}
+            </p>
+          </div>
+          {isDraft ? (
+            <Link
+              href={`/blogs/${blog.slug}/edit`}
+              className="text-sm font-semibold text-gray-700 hover:underline dark:text-gray-200"
+            >
+              Edit draft
+            </Link>
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }
 
