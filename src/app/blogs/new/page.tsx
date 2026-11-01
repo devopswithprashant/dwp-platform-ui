@@ -9,7 +9,7 @@ export default function NewBlogPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create a new blog</h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Write in Markdown, preview instantly, then publish.
+            Write in Markdown, then save as a draft or publish.
           </p>
         </div>
       </div>
@@ -18,4 +18,3 @@ export default function NewBlogPage() {
     </main>
   );
 }
-

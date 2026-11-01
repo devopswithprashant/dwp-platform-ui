@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # ==========================================
 # STAGE 1: Install Dependencies
 # ==========================================
@@ -9,10 +11,10 @@ WORKDIR /app
 COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
 
 # Install dependencies based on preferred package manager
-RUN \
+RUN --mount=type=cache,target=/root/.npm \
   if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
   elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f package-lock.json ]; then npm ci --no-audit --no-fund --foreground-scripts; \
   else echo "Lockfile not found." && exit 1; \
   fi
 

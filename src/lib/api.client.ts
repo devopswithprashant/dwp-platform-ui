@@ -167,6 +167,17 @@ export async function updateBlog(
   }
 }
 
+export async function publishBlog(blogId: number): Promise<void> {
+  const url = `${getApiBaseUrl()}/blogs/${blogId}/publish`;
+  const res = await loggedFetch("publishBlog", url, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    throw await readBlogServiceError(res, "Failed to publish blog");
+  }
+}
+
 export async function deleteBlog(blogId: number): Promise<void> {
   const url = `${getApiBaseUrl()}/blogs/${blogId}`;
   const res = await loggedFetch("deleteBlog", url, {

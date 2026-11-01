@@ -94,4 +94,25 @@ describe('auth.server', () => {
     )
     expect(ACCESS_TOKEN_COOKIE).toBe('access_token')
   })
+
+  it('returns null for rejected responses and malformed user payloads', async () => {
+    mockCookies.mockResolvedValue({
+      get: () => ({ value: 'header.payload.signature' }),
+    })
+    mockFetch
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 7 } }) })
+
+    await expect(getAuthUser()).resolves.toBeNull()
+    await expect(getAuthUser()).resolves.toBeNull()
+  })
+
+  it('returns null when the auth service request throws', async () => {
+    mockCookies.mockResolvedValue({
+      get: () => ({ value: 'header.payload.signature' }),
+    })
+    mockFetch.mockRejectedValueOnce(new Error('auth service unavailable'))
+
+    await expect(getAuthUser()).resolves.toBeNull()
+  })
 })

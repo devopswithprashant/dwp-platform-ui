@@ -31,7 +31,7 @@ export default async function EditBlogPage({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Update blog</h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Edit content, preview instantly, then update.
+            Edit content, then save as a draft or publish your changes.
           </p>
         </div>
       </div>
@@ -39,9 +39,9 @@ export default async function EditBlogPage({
       <BlogEditor
         mode="edit"
         blogId={meta.id}
+        status={meta.status}
         initialTitle={meta.title}
         initialMarkdown={content.content}
-        submitLabel="Update"
       />
     </main>
   );

@@ -6,6 +6,7 @@ import {
   updateProfile,
   ProfileApiError,
 } from "@/lib/profile.client";
+import { fetchBlogs } from "@/lib/api.client";
 
 const mockReplace = jest.fn();
 const mockRouter = { replace: mockReplace };
@@ -28,6 +29,10 @@ jest.mock("@/lib/profile.client", () => ({
   },
 }));
 
+jest.mock("@/lib/api.client", () => ({
+  fetchBlogs: jest.fn(),
+}));
+
 const profile = {
   userId: "8c0c0b42-ff2a-4d68-b90f-3b845ca8106a",
   displayName: "Ada",
@@ -43,6 +48,7 @@ describe("ProfilePage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (fetchProfile as jest.Mock).mockResolvedValue(profile);
+    (fetchBlogs as jest.Mock).mockResolvedValue([]);
   });
 
   it("shows the profile and enters edit mode", async () => {
@@ -56,6 +62,63 @@ describe("ProfilePage", () => {
     expect(screen.getByLabelText("Preferences (JSON object)")).toHaveValue(
       JSON.stringify(profile.preferences, null, 2),
     );
+  });
+
+  it("shows the user's drafts before their published posts and excludes other authors", async () => {
+    (fetchBlogs as jest.Mock).mockResolvedValue([
+      {
+        id: 1,
+        title: "My draft",
+        slug: "my-draft",
+        status: "DRAFT",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: profile.userId,
+      },
+      {
+        id: 2,
+        title: "My published post",
+        slug: "my-published-post",
+        status: "PUBLISHED",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: profile.userId,
+      },
+      {
+        id: 3,
+        title: "Someone else's draft",
+        slug: "someone-elses-draft",
+        status: "DRAFT",
+        createdAt: "2026-10-18T12:00:00Z",
+        authorUuid: "other-user",
+      },
+    ]);
+
+    render(<ProfilePage />);
+
+    const draftsHeading = await screen.findByRole("heading", { name: "Drafts" });
+    const publishedHeading = screen.getByRole("heading", { name: "Published posts" });
+    expect(screen.getByRole("link", { name: "My draft" })).toHaveAttribute(
+      "href",
+      "/blogs/my-draft",
+    );
+    expect(screen.getByRole("link", { name: "Edit draft" })).toHaveAttribute(
+      "href",
+      "/blogs/my-draft/edit",
+    );
+    expect(screen.getByRole("link", { name: "My published post" })).toBeInTheDocument();
+    expect(screen.queryByText("Someone else's draft")).not.toBeInTheDocument();
+    expect(draftsHeading.compareDocumentPosition(publishedHeading) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+  });
+
+  it("keeps the profile available and reports a blog-list failure", async () => {
+    (fetchBlogs as jest.Mock).mockRejectedValue(new Error("Blog service unavailable"));
+    render(<ProfilePage />);
+
+    expect(await screen.findByRole("heading", { name: "Ada" })).toBeInTheDocument();
+    expect(await screen.findByText(
+      "Unable to load your blogs: Blog service unavailable",
+    )).toBeInTheDocument();
+    expect(fetchProfile).toHaveBeenCalled();
   });
 
   it("sends all fields and updates the displayed profile after saving", async () => {
@@ -94,6 +157,65 @@ describe("ProfilePage", () => {
 
     expect(await screen.findByText("Preferences must be a JSON object.")).toBeInTheDocument();
     expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it("validates field limits, HTTPS avatar URLs, and both JSON objects", async () => {
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "a".repeat(101) },
+    });
+    fireEvent.change(screen.getByLabelText("Bio"), {
+      target: { value: "b".repeat(501) },
+    });
+    fireEvent.change(screen.getByLabelText("Avatar URL"), {
+      target: { value: "http://example.test/avatar.png" },
+    });
+    fireEvent.change(screen.getByLabelText("Preferences (JSON object)"), {
+      target: { value: "null" },
+    });
+    fireEvent.change(screen.getByLabelText("Social links (JSON object)"), {
+      target: { value: "not-json" },
+    });
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText("Must be at most 100 characters.")).toBeInTheDocument();
+    expect(screen.getByText("Must be at most 500 characters.")).toBeInTheDocument();
+    expect(screen.getByText("Enter an absolute HTTPS URL without user information.")).toBeInTheDocument();
+    expect(screen.getByText("Preferences must be a JSON object.")).toBeInTheDocument();
+    expect(screen.getByText("Social links must be valid JSON.")).toBeInTheDocument();
+    expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it("cancels edits and restores the original profile values", async () => {
+    const user = userEvent.setup();
+    render(<ProfilePage />);
+    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
+    await user.clear(screen.getByLabelText("Display name"));
+    await user.type(screen.getByLabelText("Display name"), "Temporary name");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(await screen.findByRole("heading", { name: "Ada" })).toBeInTheDocument();
+    expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it("shows a general message when the profile API rejects unrecognized validation details", async () => {
+    const user = userEvent.setup();
+    (updateProfile as jest.Mock).mockRejectedValue(
+      new ProfileApiError("invalid update", 400, "invalid_update", [
+        { field: "unknownField", message: "unsupported field" },
+      ]),
+    );
+    render(<ProfilePage />);
+
+    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findAllByText(
+      "The profile could not be saved. Review your entries and try again.",
+    )).toHaveLength(2);
+    expect(screen.queryByText("unsupported field")).not.toBeInTheDocument();
   });
 
   it("shows provisioning guidance for a missing profile", async () => {
