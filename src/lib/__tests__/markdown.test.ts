@@ -1,4 +1,9 @@
-import { normalizeMarkdown, preserveExtraBlankLines, resolveBlogContentText } from '../markdown'
+import {
+  markdownToTiptapHTML,
+  normalizeMarkdown,
+  preserveExtraBlankLines,
+  resolveBlogContentText,
+} from '../markdown'
 
 function createEditorState(markdown: string) {
   return {
@@ -96,12 +101,39 @@ describe('Markdown Utilities', () => {
       expect(resolveBlogContentText({ markdown: '# From markdown' })).toBe('# From markdown')
       expect(resolveBlogContentText({ body: 'From body' })).toBe('From body')
     })
+
+    it('returns an empty string when no supported content field is a string', () => {
+      expect(resolveBlogContentText({ content: 3, markdown: null, body: {} })).toBe('')
+    })
   })
 
-  describe('editor state handling', () => {
-    it('returns plain text from the editor state', () => {
-      const state = createEditorState('Hello world')
-      expect(state.getText()).toBe('Hello world')
+  describe('markdownToTiptapHTML', () => {
+    it('returns an empty paragraph for blank input', () => {
+      expect(markdownToTiptapHTML(' \n ')).toBe('<p></p>')
     })
+
+    it('escapes HTML and converts paragraphs and soft breaks', () => {
+      expect(markdownToTiptapHTML('<script>\nsecond\n\nthird')).toBe(
+        '<p>&lt;script&gt; second</p><p>third</p>',
+      )
+    })
+
+    it('converts bullet and numbered list paragraphs into list items', () => {
+      expect(markdownToTiptapHTML('- first\n- second')).toBe(
+        '<ul><li><p>first</p></li><li><p>second</p></li></ul>',
+      )
+      expect(markdownToTiptapHTML('1. first\n2. second')).toBe(
+        '<ol><li><p>first</p></li><li><p>second</p></li></ol>',
+      )
+    })
+
+    it('filters empty paragraphs', () => {
+      expect(markdownToTiptapHTML('\n\n')).toBe('<p></p>')
+    })
+  })
+
+  it('returns editor text unchanged', () => {
+    const state = createEditorState('Hello world')
+    expect(state.getText()).toBe('Hello world')
   })
 })
