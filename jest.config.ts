@@ -32,7 +32,6 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'clover'],
-  testResultsProcessor: 'jest-sonar-reporter',
   coverageThreshold: {
     global: {
       statements: 90,
