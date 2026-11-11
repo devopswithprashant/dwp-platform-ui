@@ -38,7 +38,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install bare Node.js runtime (no npm/yarn/pnpm bloat) and Nginx
-RUN apk add --no-cache nodejs nginx gettext
+RUN apk upgrade --no-cache musl musl-utils && \
+    apk add --no-cache nodejs nginx gettext
 
 # Pre-create Nginx & cache folders with permissive runtime permissions
 RUN mkdir -p /etc/nginx/conf.d \
