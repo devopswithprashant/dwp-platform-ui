@@ -2,6 +2,7 @@ import {
   BlogServiceError,
   createBlog,
   deleteBlog,
+  publishBlog,
   updateBlog,
 } from "../api.client";
 import { ACCESS_TOKEN_COOKIE } from "../auth/token";
@@ -55,6 +56,20 @@ describe("authenticated blog write requests", () => {
       .get("Authorization")).toBe("Bearer header.payload.signature");
     expect(new Headers((mockFetch.mock.calls[1] as [string, RequestInit])[1].headers)
       .get("Authorization")).toBe("Bearer header.payload.signature");
+  });
+
+  it("publishes a post through the publish endpoint with bearer credentials", async () => {
+    document.cookie = `${ACCESS_TOKEN_COOKIE}=header.payload.signature; path=/`;
+    mockFetch.mockResolvedValueOnce({ ok: true, status: 200 });
+
+    await publishBlog(42);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/blogs/42/publish",
+      expect.objectContaining({ method: "POST", headers: expect.any(Headers) }),
+    );
+    expect(new Headers((mockFetch.mock.calls[0] as [string, RequestInit])[1].headers)
+      .get("Authorization")).toMatch(/^Bearer /);
   });
 
   it("does not send a write without a signed-in token", async () => {

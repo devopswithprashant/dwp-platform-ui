@@ -19,12 +19,14 @@ const config: Config = {
   modulePathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/target/'],
   watchPathIgnorePatterns: ['<rootDir>/.next/'],
   collectCoverageFrom: [
-    'src/lib/auth/**/*.{ts,tsx}',
-    'src/app/_components/AuthNav.tsx',
-    'src/app/login/**/*.{ts,tsx}',
-    'src/app/register/**/*.{ts,tsx}',
+    'src/**/*.{ts,tsx}',
+    '!src/**/__tests__/**',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.spec.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
+    '!src/lib/types.ts',
+    '!src/lib/profile.types.ts',
   ],
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -32,10 +34,10 @@ const config: Config = {
   testResultsProcessor: 'jest-sonar-reporter',
   coverageThreshold: {
     global: {
-      statements: 80,
-      branches: 80,
-      functions: 80,
-      lines: 80,
+      statements: 70,
+      branches: 75,
+      functions: 70,
+      lines: 70,
     },
   },
 }

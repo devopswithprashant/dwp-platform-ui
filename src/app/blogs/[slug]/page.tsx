@@ -21,12 +21,14 @@ export default async function BlogPage({
   const meta = blogs.find((b) => b.slug === slug);
   if (!meta) notFound();
 
-  const blog = await fetchBlogContent(meta.id);
   const isOwner =
     Boolean(user) &&
     Boolean(meta.authorUuid) &&
     currentProfileUserId !== null &&
     meta.authorUuid === currentProfileUserId;
+  if (meta.status?.toUpperCase() !== "PUBLISHED" && !isOwner) notFound();
+
+  const blog = await fetchBlogContent(meta.id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">

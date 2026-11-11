@@ -3,27 +3,37 @@
 import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { CreateBlogRequest, UpdateBlogRequest } from "@/lib/types";
-import { BlogServiceError, createBlog, updateBlog } from "@/lib/api.client";
+import {
+  BlogServiceError,
+  createBlog,
+  publishBlog,
+  updateBlog,
+} from "@/lib/api.client";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
 
 type Mode = "create" | "edit";
+type SaveAction = "draft" | "publish" | "live";
 
 export default function BlogEditor(props: {
   mode: Mode;
   blogId?: number;
+  status?: string;
   initialTitle?: string;
   initialMarkdown?: string;
-  submitLabel?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const editorRef = useRef<RichTextEditorHandle>(null);
+  const createdDraftId = useRef<number | null>(null);
 
   const [title, setTitle] = useState(props.initialTitle ?? "");
   const [hasContent, setHasContent] = useState(() =>
     Boolean(props.initialMarkdown?.trim()),
   );
   const [error, setError] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<SaveAction | null>(null);
+  const isPublishedEdit =
+    props.mode === "edit" && props.status?.toUpperCase() === "PUBLISHED";
 
   const handleContentChange = useCallback((isEmpty: boolean) => {
     setHasContent((current) => {
@@ -38,12 +48,13 @@ export default function BlogEditor(props: {
     return commonValid && Number.isFinite(props.blogId);
   }, [title, hasContent, props.mode, props.blogId]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function save(action: SaveAction) {
+    if (isPending || !canSubmit) return;
     setError(null);
 
     const markdown = editorRef.current?.getMarkdown() ?? "";
 
+    setActiveAction(action);
     startTransition(async () => {
       try {
         if (props.mode === "create") {
@@ -51,16 +62,26 @@ export default function BlogEditor(props: {
             title: title.trim(),
             markdown,
           };
-          await createBlog(payload);
+          if (createdDraftId.current === null) {
+            createdDraftId.current = await createBlog(payload);
+          } else {
+            await updateBlog(createdDraftId.current, payload);
+          }
+          if (action === "publish") {
+            await publishBlog(createdDraftId.current);
+          }
         } else {
           const payload: UpdateBlogRequest = {
             title: title.trim(),
             markdown,
           };
           await updateBlog(props.blogId!, payload);
+          if (action === "publish") {
+            await publishBlog(props.blogId!);
+          }
         }
 
-        router.push("/blogs");
+        router.push(action === "draft" ? "/profile" : "/blogs");
         router.refresh();
       } catch (err) {
         if (err instanceof BlogServiceError && err.status === 401) {
@@ -76,15 +97,27 @@ export default function BlogEditor(props: {
           return;
         }
         const message = err instanceof Error ? err.message : "Request failed";
-        setError(message);
+        setError(
+          props.mode === "create" &&
+            action === "publish" &&
+            createdDraftId.current !== null
+            ? `The draft was saved, but publishing failed: ${message}`
+            : message,
+        );
+      } finally {
+        setActiveAction(null);
       }
     });
   }
 
-  const submitText = props.submitLabel ?? (props.mode === "create" ? "Create" : "Update");
-
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        save(isPublishedEdit ? "live" : "draft");
+      }}
+      className="space-y-6"
+    >
       <div className="grid gap-4 md:grid-cols-3">
         <label className="md:col-span-2">
           <span className="mb-2 block text-sm font-medium">Title</span>
@@ -109,15 +142,44 @@ export default function BlogEditor(props: {
         initialMarkdown={props.initialMarkdown}
         onContentChange={handleContentChange}
         toolbarEnd={
-          <button
-            type="submit"
-            disabled={!canSubmit || isPending}
-            className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? `${submitText}...` : submitText}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {isPublishedEdit ? (
+              <button
+                type="submit"
+                disabled={!canSubmit || isPending}
+                className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPending ? "Saving..." : "Save published changes"}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="submit"
+                  disabled={!canSubmit || isPending}
+                  className="inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-900"
+                >
+                  {isPending && activeAction === "draft" ? "Saving..." : "Save as draft"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => save("publish")}
+                  disabled={!canSubmit || isPending}
+                  className="inline-flex items-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending && activeAction === "publish" ? "Publishing..." : "Publish"}
+                </button>
+              </>
+            )}
+          </div>
         }
       />
+
+      {isPublishedEdit ? (
+        <p className="text-sm text-amber-700 dark:text-amber-300">
+          Saving these changes updates the published version immediately. Saving
+          published edits as a separate draft requires backend API support.
+        </p>
+      ) : null}
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
@@ -134,7 +196,7 @@ export default function BlogEditor(props: {
           Cancel
         </button>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          After {props.mode === "create" ? "creation" : "update"} you’ll be redirected to Home.
+          Saving a draft returns you to your profile; publishing returns you to the blog list.
         </p>
       </div>
     </form>

@@ -23,11 +23,14 @@ export default async function BlogsPage() {
     console.error("Failed to fetch blogs:", err);
     error = err instanceof Error ? err.message : "Failed to load blogs";
   }
+  const publishedBlogs = blogs.filter(
+    (blog) => blog.status?.toUpperCase() === "PUBLISHED",
+  );
   return (
     <main className="mx-auto max-w-5xl px-4 py-12">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">All blogs</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Published blogs</h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Long-form notes and stories on DevOps, infra and systems.
           </p>
@@ -57,8 +60,8 @@ export default async function BlogsPage() {
       )}
 
       <ul className="space-y-4">
-        {blogs && blogs.length > 0 ? (
-          blogs.map((blog) => (
+        {publishedBlogs.length > 0 ? (
+          publishedBlogs.map((blog) => (
             <li
               key={blog.id}
               className="group rounded-2xl border border-gray-200 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900/70 dark:hover:border-blue-500/40"
@@ -70,7 +73,7 @@ export default async function BlogsPage() {
                 {blog.title}
               </Link>
               <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {blog.status === "PUBLISHED" ? "Published" : "Draft"}
+                Published
               </div>
               <div className="mt-4">
                 <BlogAuthor
@@ -87,7 +90,7 @@ export default async function BlogsPage() {
           ))
         ) : (
           <p className="text-gray-500 dark:text-gray-400">
-            No blogs yet. Be the first to{" "}
+            No published blogs yet. Be the first to{" "}
             <Link href={user ? "/blogs/new" : "/login?callbackUrl=/blogs/new"} className="underline">
               write one
             </Link>

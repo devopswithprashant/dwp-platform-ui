@@ -135,7 +135,7 @@ jobs:
           format: 'table'
           exit-code: '1'          # Fails the pipeline if vulnerabilities are found
           ignore-unfixed: true     # Optional: ignore CVEs without an available fix
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH' 
 
   
   deploy-DEV:
@@ -150,7 +150,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
@@ -200,7 +200,7 @@ jobs:
       - name: Checkout gitops repo
         uses: actions/checkout@v6
         with:
-          repository: "devopswithprashant/k8-blogApp"
+          repository: "devopswithprashant/k8-dwp"
           token: ${{ secrets.GHEC_TOKEN_K8 }}
           ref: ${{ env.GITOPS_BRANCH_NAME }}
           fetch-depth: 10
