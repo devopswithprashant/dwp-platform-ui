@@ -108,6 +108,7 @@ jobs:
         platforms: linux/arm64
         tags: |
           dwp-ui:${{ github.sha }}
+        # Optional: use GitHub Actions cache for build layers (fast incremental builds)
         #cache-from: type=gha
         #cache-to: type=gha,mode=max
     
@@ -119,3 +120,4 @@ jobs:
         exit-code: '1'          # Fails the pipeline if vulnerabilities are found
         ignore-unfixed: true     # Optional: ignore CVEs without an available fix
         severity: 'CRITICAL'
+
