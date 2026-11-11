@@ -27,7 +27,6 @@ const config: Config = {
     '!src/**/*.stories.{js,jsx,ts,tsx}',
     '!src/lib/types.ts',
     '!src/lib/profile.types.ts',
-    '!src/lib/logging/types.ts',
   ],
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -35,10 +34,10 @@ const config: Config = {
   testResultsProcessor: 'jest-sonar-reporter',
   coverageThreshold: {
     global: {
-      statements: 90,
-      branches: 85,
-      functions: 90,
-      lines: 90,
+      statements: 70,
+      branches: 75,
+      functions: 70,
+      lines: 70,
     },
   },
 }

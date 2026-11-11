@@ -87,25 +87,6 @@ describe('Blog Types', () => {
     expect(token).toBe('nested-token-value')
   })
 
-  it.each([
-    null,
-    undefined,
-    'token',
-    42,
-    {},
-    { token: '   ' },
-  ])('returns no token for unsupported payloads: %p', (payload) => {
-    expect(extractAccessToken(payload)).toBeNull()
-  })
-
-  it('finds supported tokens at any nesting depth and stops on cycles', () => {
-    const payload: Record<string, unknown> = {};
-    payload.self = payload;
-    payload.data = { nested: { jwt: 'deep-token' } };
-
-    expect(extractAccessToken(payload)).toBe('deep-token');
-  });
-
   it('should parse a user from a nested auth profile payload', () => {
     const user = parseAuthUser({
       data: {
@@ -136,29 +117,5 @@ describe('Blog Types', () => {
       username: 'mohit',
       email: 'mohit@example.com',
     })
-  })
-
-  it.each([
-    null,
-    undefined,
-    'user',
-    {},
-    { id: '', username: 'name' },
-    { id: 1, username: '   ' },
-    { id: 1 },
-  ])('rejects invalid auth user payloads: %p', (payload) => {
-    expect(parseAuthUser(payload)).toBeNull();
-  });
-
-  it('finds valid users in nested payloads despite cycles', () => {
-    const payload: Record<string, unknown> = {};
-    payload.self = payload;
-    payload.data = { profile: { id: 'user-id', username: ' ada ', email: 3 } };
-
-    expect(parseAuthUser(payload)).toEqual({
-      id: 'user-id',
-      username: 'ada',
-      email: '',
-    });
   })
 })

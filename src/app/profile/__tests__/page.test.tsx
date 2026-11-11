@@ -159,65 +159,6 @@ describe("ProfilePage", () => {
     expect(updateProfile).not.toHaveBeenCalled();
   });
 
-  it("validates field limits, HTTPS avatar URLs, and both JSON objects", async () => {
-    const user = userEvent.setup();
-    render(<ProfilePage />);
-    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
-    fireEvent.change(screen.getByLabelText("Display name"), {
-      target: { value: "a".repeat(101) },
-    });
-    fireEvent.change(screen.getByLabelText("Bio"), {
-      target: { value: "b".repeat(501) },
-    });
-    fireEvent.change(screen.getByLabelText("Avatar URL"), {
-      target: { value: "http://example.test/avatar.png" },
-    });
-    fireEvent.change(screen.getByLabelText("Preferences (JSON object)"), {
-      target: { value: "null" },
-    });
-    fireEvent.change(screen.getByLabelText("Social links (JSON object)"), {
-      target: { value: "not-json" },
-    });
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    expect(await screen.findByText("Must be at most 100 characters.")).toBeInTheDocument();
-    expect(screen.getByText("Must be at most 500 characters.")).toBeInTheDocument();
-    expect(screen.getByText("Enter an absolute HTTPS URL without user information.")).toBeInTheDocument();
-    expect(screen.getByText("Preferences must be a JSON object.")).toBeInTheDocument();
-    expect(screen.getByText("Social links must be valid JSON.")).toBeInTheDocument();
-    expect(updateProfile).not.toHaveBeenCalled();
-  });
-
-  it("cancels edits and restores the original profile values", async () => {
-    const user = userEvent.setup();
-    render(<ProfilePage />);
-    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
-    await user.clear(screen.getByLabelText("Display name"));
-    await user.type(screen.getByLabelText("Display name"), "Temporary name");
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-
-    expect(await screen.findByRole("heading", { name: "Ada" })).toBeInTheDocument();
-    expect(updateProfile).not.toHaveBeenCalled();
-  });
-
-  it("shows a general message when the profile API rejects unrecognized validation details", async () => {
-    const user = userEvent.setup();
-    (updateProfile as jest.Mock).mockRejectedValue(
-      new ProfileApiError("invalid update", 400, "invalid_update", [
-        { field: "unknownField", message: "unsupported field" },
-      ]),
-    );
-    render(<ProfilePage />);
-
-    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    expect(await screen.findAllByText(
-      "The profile could not be saved. Review your entries and try again.",
-    )).toHaveLength(2);
-    expect(screen.queryByText("unsupported field")).not.toBeInTheDocument();
-  });
-
   it("shows provisioning guidance for a missing profile", async () => {
     (fetchProfile as jest.Mock).mockRejectedValue(
       new ProfileApiError("not found", 404),

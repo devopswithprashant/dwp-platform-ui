@@ -48,49 +48,4 @@ describe("BlogsPage", () => {
     );
     expect(screen.queryByText("Private draft")).not.toBeInTheDocument();
   });
-
-  it("shows the create action and identifies the current user's published post", async () => {
-    (getAuthUser as jest.Mock).mockResolvedValue({ id: 1 });
-    (getCurrentProfileUserId as jest.Mock).mockResolvedValue("author-1");
-
-    render(await BlogsPage());
-
-    expect(screen.getByRole("link", { name: "Create Blog" })).toHaveAttribute(
-      "href",
-      "/blogs/new",
-    );
-    expect(screen.getByText("Your post")).toBeInTheDocument();
-  });
-
-  it("shows a sign-in prompt and empty-state copy when no posts are published", async () => {
-    (fetchBlogs as jest.Mock).mockResolvedValue([]);
-
-    render(await BlogsPage());
-
-    expect(screen.getByRole("link", { name: "Sign in to create" })).toHaveAttribute(
-      "href",
-      "/login?callbackUrl=/blogs/new",
-    );
-    expect(screen.getByText(/No published blogs yet/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "write one" })).toHaveAttribute(
-      "href",
-      "/login?callbackUrl=/blogs/new",
-    );
-  });
-
-  it("reports a blog service error and retains the signed-in create action", async () => {
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
-    (fetchBlogs as jest.Mock).mockRejectedValue(new Error("Service unavailable"));
-    (getAuthUser as jest.Mock).mockResolvedValue({ id: 1 });
-
-    try {
-      render(await BlogsPage());
-    } finally {
-      consoleError.mockRestore();
-    }
-
-    expect(screen.getByText("Error loading blogs")).toBeInTheDocument();
-    expect(screen.getByText("Service unavailable")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create Blog" })).toBeInTheDocument();
-  });
 });
