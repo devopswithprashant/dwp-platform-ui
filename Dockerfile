@@ -5,16 +5,11 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files for aggressive Docker layer caching
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+# Copy npm manifests for dependency layer caching
+COPY package.json package-lock.json ./
 
-# Install dependencies based on preferred package manager
-RUN \
-  if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Install dependencies from the committed npm lockfile
+RUN npm ci --no-audit --no-fund --foreground-scripts
 
 # ==========================================
 # STAGE 2: Build Application
